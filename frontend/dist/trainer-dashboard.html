@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trainer Dashboard - Capacity Connect</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>:root{--bg-dark:#0a0e1a;--accent-teal:#00d4bb;--accent-cyan:#00e5ff;--accent-gold:#f3a14e;--accent-red:#ff5252;--accent-green:#4caf50;--text-main:#fff;--text-muted:#ffffff80;--sidebar-bg:#080c18f2;--card-bg:#ffffff09;--card-border:#ffffff12;--hover-border:#00d4bb66}*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif}body{background-color:var(--bg-dark);color:var(--text-main);min-height:100vh;display:flex;overflow-x:hidden}#stars-bg{z-index:0;pointer-events:none;position:fixed;inset:0}.sidebar{background-color:var(--sidebar-bg);-webkit-backdrop-filter:blur(20px);z-index:10;border-right:1px solid var(--card-border);flex-direction:column;width:250px;padding:24px 0;display:flex;position:fixed;top:0;bottom:0;left:0}.logo{color:var(--text-main);border-bottom:1px solid var(--card-border);align-items:center;gap:10px;margin-bottom:24px;padding:0 24px 32px;font-size:24px;font-weight:700;display:flex}.logo-icon{color:var(--accent-teal)}.nav-item{color:var(--text-muted);align-items:center;gap:12px;padding:12px 24px;font-size:15px;text-decoration:none;transition:all .2s;display:flex}.nav-item:hover{color:var(--text-main);background-color:#ffffff0d}.nav-item.active{color:var(--accent-teal);border-right:3px solid var(--accent-teal);background-color:#00d4bb1a}.spacer{flex-grow:1}.logout-btn{color:var(--accent-red);text-align:center;background:#ff52521a;border:1px solid #ff52524d;border-radius:8px;margin:0 24px;padding:12px;text-decoration:none;transition:all .2s;display:block}.logout-btn:hover{background:#ff525233}.main-content{z-index:1;flex-direction:column;flex-grow:1;gap:24px;max-width:1400px;margin-left:250px;padding:24px;display:flex;position:relative}.topbar{border-bottom:1px solid var(--card-border);justify-content:space-between;align-items:center;padding-bottom:24px;display:flex}.page-title{font-size:28px;font-weight:600}.user-controls{align-items:center;gap:20px;display:flex}.notification{cursor:pointer;font-size:20px;position:relative}.notification-dot{background-color:var(--accent-red);color:#fff;border-radius:50%;justify-content:center;align-items:center;width:14px;height:14px;font-size:10px;font-weight:700;display:flex;position:absolute;top:-2px;right:-2px}.user-profile{align-items:center;gap:12px;display:flex}.avatar{background:linear-gradient(135deg, var(--accent-teal), #007bb5);color:#fff;border-radius:50%;justify-content:center;align-items:center;width:40px;height:40px;font-size:16px;font-weight:700;display:flex}.card{background-color:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;padding:20px;transition:transform .25s,box-shadow .25s}.card:hover{transform:translateY(-3px);box-shadow:0 8px 25px #0000004d}.section-title{color:var(--text-main);margin-bottom:16px;font-size:18px;font-weight:600}.stats-grid{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;display:grid}.stat-card{flex-direction:column;gap:8px;display:flex;position:relative;overflow:hidden}.stat-card:before{content:"";width:4px;position:absolute;top:0;bottom:0;left:0}.stat-teal:before{background-color:var(--accent-teal)}.stat-cyan:before{background-color:var(--accent-cyan)}.stat-gold:before{background-color:var(--accent-gold)}.stat-green:before{background-color:var(--accent-green)}.stat-title{color:var(--text-muted);font-size:14px}.stat-value{align-items:center;gap:10px;font-size:32px;font-weight:700;display:flex}.stat-sub{align-items:center;gap:4px;font-size:13px;display:flex}.sub-up{color:var(--accent-green)}.sub-neutral{color:var(--text-muted)}.sub-warn{color:var(--accent-gold)}@keyframes pulse-gold{0%{text-shadow:0 0 #f3a14e00}50%{text-shadow:0 0 15px #f3a14ecc}to{text-shadow:0 0 #f3a14e00}}.glow-gold{color:var(--accent-gold);animation:2s infinite pulse-gold}.stat-flex-row{justify-content:space-between;align-items:center;display:flex}.svg-progress{width:60px;height:60px;transform:rotate(-90deg)}.svg-progress circle{fill:none;stroke-width:6px}.svg-bg{stroke:#ffffff1a}.svg-value{stroke:var(--accent-teal);stroke-dasharray:163;stroke-dashoffset:36px;stroke-linecap:round}.svg-text-group{position:relative}.svg-label{color:var(--text-main);font-size:12px;font-weight:700;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}.table-container{width:100%;overflow-x:auto}table{border-collapse:collapse;text-align:left;width:100%}th{color:var(--text-muted);border-bottom:1px solid var(--card-border);padding:12px 16px;font-size:13px;font-weight:500}td{border-bottom:1px solid #ffffff05;padding:16px;font-size:14px}tr:nth-child(2n) td{background-color:#ffffff05}tr:hover td{background-color:#ffffff0f}.trainee-name{font-weight:500}.progress-wrapper{align-items:center;gap:12px;display:flex}.progress-bar-bg{background:#ffffff1a;border-radius:3px;width:100px;height:6px;overflow:hidden}.progress-bar-fill{border-radius:3px;height:100%}.pb-green{background-color:var(--accent-green)}.pb-gold{background-color:var(--accent-gold)}.pb-red{background-color:var(--accent-red)}.badge{border-radius:12px;padding:4px 10px;font-size:12px;font-weight:500;display:inline-block}.badge-teal{color:var(--accent-teal);background:#00d4bb26;border:1px solid #00d4bb4d}.badge-gold{color:var(--accent-gold);background:#f3a14e26;border:1px solid #f3a14e4d}.badge-red{color:var(--accent-red);background:#ff525226;border:1px solid #ff52524d}.badge-green{color:var(--accent-green);background:#4caf5026;border:1px solid #4caf504d}.two-cols{grid-template-columns:1fr 1fr;gap:24px;display:grid}.session-card{border-left:3px solid var(--accent-teal);background:#ffffff05;border-radius:0 8px 8px 0;margin-bottom:12px;padding:16px}.session-card:last-child{margin-bottom:0}.session-time{color:var(--text-muted);margin-bottom:4px;font-size:13px}.session-title-text{margin-bottom:4px;font-size:15px;font-weight:500}.session-attendees{color:var(--accent-teal);align-items:center;gap:4px;font-size:13px;display:flex}.chart-container{width:100%;height:300px;position:relative}.ai-title{color:var(--accent-teal);align-items:center;gap:8px;display:flex}.recs-grid{grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;display:grid}.rec-card{flex-direction:column;gap:12px;display:flex}.rec-title{font-size:16px;font-weight:600}.rec-desc{color:var(--text-muted);flex-grow:1;font-size:14px}.rec-meta{justify-content:space-between;align-items:center;margin-top:8px;display:flex}.btn-assign{background-color:var(--accent-teal);color:#000;cursor:pointer;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:600;transition:all .2s}.btn-assign:hover{background-color:#00e0c6;transform:scale(1.02)}@media (width<=1024px){.two-cols{grid-template-columns:1fr}}@media (width<=768px){.sidebar{transform:translate(-100%)}.main-content{margin-left:0}}</style>
+</head>
+<body>
+
+    <!-- Starfield Background -->
+    <canvas id="stars-bg"></canvas>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <span class="logo-icon">▲</span> Capacity Connect
+        </div>
+        <a href="#" class="nav-item active">📊 Dashboard</a>
+        <a href="#" class="nav-item">📚 My Courses</a>
+        <a href="#" class="nav-item">🧑‍🎓 Trainees</a>
+        <a href="#" class="nav-item">📝 Assessments</a>
+        <a href="#" class="nav-item">📋 Competency Reports</a>
+        <a href="#" class="nav-item">🤖 AI Recommendations</a>
+        
+        <div class="spacer"></div>
+        <a href="trainer-login.html" class="logout-btn">Logout</a>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        
+        <!-- Topbar -->
+        <header class="topbar">
+            <h1 class="page-title">Trainer Dashboard</h1>
+            <div class="user-controls">
+                <div class="notification">
+                    🔔
+                    <span class="notification-dot">5</span>
+                </div>
+                <div class="user-profile">
+                    <div class="avatar">SC</div>
+                    <span style="font-weight: 500;">Dr. Sarah Chen</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Row -->
+        <div class="stats-grid">
+            <div class="card stat-card stat-teal">
+                <div class="stat-title">Total Trainees</div>
+                <div class="stat-value">34</div>
+                <div class="stat-sub sub-up">▲ 6 new</div>
+            </div>
+            
+            <div class="card stat-card stat-cyan">
+                <div class="stat-title">Active Courses</div>
+                <div class="stat-value">6</div>
+                <div class="stat-sub sub-neutral">● 2 starting soon</div>
+            </div>
+
+            <div class="card stat-card stat-gold">
+                <div class="stat-title">Pending Assessments</div>
+                <div class="stat-value"><span class="glow-gold">12</span></div>
+                <div class="stat-sub sub-warn">⚠ Needs attention</div>
+            </div>
+
+            <div class="card stat-card stat-green">
+                <div class="stat-flex-row">
+                    <div>
+                        <div class="stat-title">Avg Competency Score</div>
+                        <div class="stat-value">7.8<span style="font-size:16px;color:var(--text-muted)">/10</span></div>
+                        <div class="stat-sub sub-up">▲ +0.4</div>
+                    </div>
+                    <div class="svg-text-group">
+                        <svg class="svg-progress" viewBox="0 0 60 60">
+                            <circle class="svg-bg" cx="30" cy="30" r="26"></circle>
+                            <circle class="svg-value" cx="30" cy="30" r="26"></circle>
+                        </svg>
+                        <div class="svg-label">78%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assigned Trainees Table -->
+        <div class="card">
+            <h2 class="section-title">Assigned Trainees</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Course</th>
+                            <th>Progress</th>
+                            <th>Competency</th>
+                            <th>Last Active</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="trainee-name">Priya Sharma</td>
+                            <td>Python Basics</td>
+                            <td>
+                                <div class="progress-wrapper">
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill pb-green" style="width: 85%"></div></div>
+                                    <span>85%</span>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-teal">Advanced</span></td>
+                            <td style="color:var(--text-muted)">2h ago</td>
+                        </tr>
+                        <tr>
+                            <td class="trainee-name">Arjun Mehra</td>
+                            <td>Data Science</td>
+                            <td>
+                                <div class="progress-wrapper">
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill pb-gold" style="width: 60%"></div></div>
+                                    <span>60%</span>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-gold">Intermediate</span></td>
+                            <td style="color:var(--text-muted)">1d ago</td>
+                        </tr>
+                        <tr>
+                            <td class="trainee-name">Lisa Wang</td>
+                            <td>Web Development</td>
+                            <td>
+                                <div class="progress-wrapper">
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill pb-red" style="width: 35%"></div></div>
+                                    <span>35%</span>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-red">Beginner</span></td>
+                            <td style="color:var(--text-muted)">3h ago</td>
+                        </tr>
+                        <tr>
+                            <td class="trainee-name">Ravi Patel</td>
+                            <td>Cloud Computing</td>
+                            <td>
+                                <div class="progress-wrapper">
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill pb-green" style="width: 92%"></div></div>
+                                    <span>92%</span>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-teal">Advanced</span></td>
+                            <td style="color:var(--text-muted)">30m ago</td>
+                        </tr>
+                        <tr>
+                            <td class="trainee-name">Sneha Gupta</td>
+                            <td>ML Fundamentals</td>
+                            <td>
+                                <div class="progress-wrapper">
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill pb-gold" style="width: 55%"></div></div>
+                                    <span>55%</span>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-gold">Intermediate</span></td>
+                            <td style="color:var(--text-muted)">5h ago</td>
+                        </tr>
+                        <tr>
+                            <td class="trainee-name">James Wilson</td>
+                            <td>DevOps</td>
+                            <td>
+                                <div class="progress-wrapper">
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill pb-green" style="width: 78%"></div></div>
+                                    <span>78%</span>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-teal">Advanced</span></td>
+                            <td style="color:var(--text-muted)">1h ago</td>
+                        </tr>
+                        <tr>
+                            <td class="trainee-name">Ananya Roy</td>
+                            <td>Cybersecurity</td>
+                            <td>
+                                <div class="progress-wrapper">
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill pb-red" style="width: 20%"></div></div>
+                                    <span>20%</span>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-red">Beginner</span></td>
+                            <td style="color:var(--text-muted)">2d ago</td>
+                        </tr>
+                        <tr>
+                            <td class="trainee-name">Carlos Rivera</td>
+                            <td>AI Ethics</td>
+                            <td>
+                                <div class="progress-wrapper">
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill pb-gold" style="width: 68%"></div></div>
+                                    <span>68%</span>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-gold">Intermediate</span></td>
+                            <td style="color:var(--text-muted)">4h ago</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Two Columns -->
+        <div class="two-cols">
+            <!-- Upcoming Sessions -->
+            <div class="card">
+                <h2 class="section-title">Upcoming Sessions</h2>
+                
+                <div class="session-card">
+                    <div class="session-time">Sep 30, 10:00 AM</div>
+                    <div class="session-title-text">Python Basics Review</div>
+                    <div class="session-attendees">👥 12 attendees</div>
+                </div>
+                
+                <div class="session-card">
+                    <div class="session-time">Oct 1, 2:00 PM</div>
+                    <div class="session-title-text">Data Science Lab</div>
+                    <div class="session-attendees">👥 8 attendees</div>
+                </div>
+
+                <div class="session-card">
+                    <div class="session-time">Oct 3, 11:00 AM</div>
+                    <div class="session-title-text">ML Workshop</div>
+                    <div class="session-attendees">👥 15 attendees</div>
+                </div>
+
+                <div class="session-card">
+                    <div class="session-time">Oct 5, 9:00 AM</div>
+                    <div class="session-title-text">Cloud Certification Prep</div>
+                    <div class="session-attendees">👥 10 attendees</div>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="card">
+                <h2 class="section-title">Competency Progress Overview</h2>
+                <div class="chart-container">
+                    <canvas id="competencyChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Recommendations -->
+        <div class="card" style="border-color: rgba(0, 212, 187, 0.3);">
+            <h2 class="section-title ai-title">🤖 AI-Powered Recommendations</h2>
+            <div class="recs-grid">
+                
+                <div class="card rec-card">
+                    <div class="rec-title">🔬 Advanced Python for Data Science</div>
+                    <div class="rec-desc">Targeted path for trainees in data manipulation</div>
+                    <div class="rec-meta">
+                        <span class="badge badge-teal">Advanced</span>
+                        <button class="btn-assign">Assign to Trainees</button>
+                    </div>
+                </div>
+
+                <div class="card rec-card">
+                    <div class="rec-title">📊 Business Analytics Essentials</div>
+                    <div class="rec-desc">Foundational course for improving analytical skills</div>
+                    <div class="rec-meta">
+                        <span class="badge badge-gold">Intermediate</span>
+                        <button class="btn-assign">Assign to Trainees</button>
+                    </div>
+                </div>
+
+                <div class="card rec-card">
+                    <div class="rec-title">🛡️ Cybersecurity Fundamentals</div>
+                    <div class="rec-desc">Essential security training for all team members</div>
+                    <div class="rec-meta">
+                        <span class="badge badge-green">Beginner</span>
+                        <button class="btn-assign">Assign to Trainees</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Scripts -->
+    <script>
+        // Chart.js initialization
+        const ctx = document.getElementById('competencyChart').getContext('2d');
+        
+        Chart.defaults.color = 'rgba(255, 255, 255, 0.5)';
+        Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Technical Skills', 'Communication', 'Problem Solving', 'Leadership', 'Teamwork'],
+                datasets: [{
+                    label: 'Competency Score (%)',
+                    data: [78, 65, 82, 58, 71],
+                    backgroundColor: [
+                        '#00d4bb',
+                        '#f3a14e',
+                        '#00d4bb',
+                        '#f3a14e',
+                        '#00d4bb'
+                    ],
+                    borderRadius: 4,
+                    barPercentage: 0.6
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(8, 12, 24, 0.9)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.06)'
+                        },
+                        max: 100
+                    },
+                    y: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Starfield Background
+        const _c = document.getElementById('stars-bg'), _x = _c.getContext('2d');
+        let _W, _H, _s = [];
+        function _r() {
+            _W = _c.width = innerWidth;
+            _H = _c.height = innerHeight;
+            _s = Array.from({length: Math.floor(_W * _H / 3200)}, () => ({
+                x: Math.random() * _W,
+                y: Math.random() * _H,
+                r: Math.random() * 1.1 + 0.2,
+                a: Math.random(),
+                d: (Math.random() - 0.5) * 0.003,
+                v: Math.random() * 0.03 + 0.005
+            }));
+        }
+        addEventListener('resize', _r);
+        _r();
+        (function _t() {
+            _x.clearRect(0, 0, _W, _H);
+            for (const s of _s) {
+                s.a += s.d;
+                if (s.a <= 0 || s.a >= 1) s.d *= -1;
+                s.y -= s.v;
+                if (s.y < -2) {
+                    s.y = _H + 2;
+                    s.x = Math.random() * _W;
+                }
+                _x.beginPath();
+                _x.arc(s.x, s.y, s.r, 0, 6.28);
+                _x.fillStyle = `rgba(255, 255, 255, ${s.a * 0.55})`;
+                _x.fill();
+            }
+            requestAnimationFrame(_t);
+        })();
+    </script>
+</body>
+</html>

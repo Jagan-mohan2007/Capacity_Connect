@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capacity Connect — Trainee Login</title>
+<style>*,:before,:after{box-sizing:border-box;margin:0;padding:0}html,body{color:#fff;background:#000;justify-content:center;align-items:center;width:100%;height:100%;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;display:flex}canvas#bg{z-index:0;pointer-events:none;position:fixed;inset:0}.card{z-index:10;-webkit-backdrop-filter:blur(24px);background:#ffffff0d;border:1px solid #50d0c84d;border-radius:18px;width:400px;padding:2.5rem 2rem;position:relative;box-shadow:0 0 60px #50d0c81f,0 20px 60px #0009}.brand{letter-spacing:.35em;text-transform:uppercase;color:#ffffff47;text-align:center;margin-bottom:.4rem;font-size:.62rem}h2{letter-spacing:.1em;color:#50d0c8;text-align:center;margin-bottom:1.6rem;font-size:1.5rem;font-weight:300}.status{border-radius:8px;margin-bottom:1rem;padding:10px 14px;font-size:.82rem;line-height:1.5;display:none}.status.info{color:#ffffffbf;background:#ffffff0f;border:1px solid #ffffff1a;display:block}.status.success{color:#50d0c8;background:#50d0c81a;border:1px solid #50d0c859;display:block}.status.error{color:#ff8080;background:#ff50501a;border:1px solid #ff505059;display:block}input{color:#fff;background:#ffffff0d;border:1px solid #ffffff1f;border-radius:9px;outline:none;width:100%;margin-bottom:.85rem;padding:12px 15px;font-size:.9rem;transition:border-color .3s}input::placeholder{color:#ffffff4d}input:focus{border-color:#50d0c8}.btn-primary{color:#000;letter-spacing:.07em;cursor:pointer;background:#50d0c8;border:none;border-radius:9px;width:100%;margin-top:.2rem;padding:12px;font-size:.9rem;font-weight:700;transition:all .25s}.btn-primary:hover:not(:disabled){filter:brightness(1.15);transform:translateY(-1px)}.btn-primary:disabled{opacity:.55;cursor:not-allowed;transform:none}.row-link{justify-content:flex-end;margin-top:.6rem;display:flex}.link-btn{color:#ffffff61;cursor:pointer;background:0 0;border:none;padding:0;font-size:.78rem;transition:color .25s}.link-btn:hover{color:#fff}.divider{color:#fff3;align-items:center;margin:1.4rem 0;font-size:.75rem;display:flex}.divider:before,.divider:after{content:"";border-bottom:1px solid #ffffff14;flex:1}.divider span{padding:0 10px}.btn-google{color:#333;cursor:pointer;background:#fff;border:1px solid #ffffff26;border-radius:9px;justify-content:center;align-items:center;gap:10px;width:100%;padding:11px;font-size:.88rem;font-weight:500;transition:all .25s;display:flex}.btn-google:hover:not(:disabled){background:#f0f0f0;transform:translateY(-1px);box-shadow:0 6px 20px #00000059}.btn-google:disabled{opacity:.55;cursor:not-allowed;transform:none}.forgot-panel{background:#ffffff0a;border:1px solid #ffffff14;border-radius:10px;margin-top:1.2rem;padding:1rem;display:none}.forgot-panel.open{display:block}.forgot-panel p{color:#ffffff80;margin-bottom:.8rem;font-size:.8rem}.forgot-panel .btn-reset{color:#50d0c8;cursor:pointer;background:0 0;border:1px solid #50d0c866;border-radius:8px;width:100%;padding:10px;font-size:.85rem;transition:all .25s}.forgot-panel .btn-reset:hover:not(:disabled){background:#50d0c81a}.forgot-panel .btn-reset:disabled{opacity:.5;cursor:not-allowed}.back-link{color:#ffffff38;text-align:center;letter-spacing:.1em;margin-top:1.5rem;font-size:.7rem;text-decoration:none;transition:color .25s;display:block}.back-link:hover{color:#50d0c8}</style>
+  <script type="module" crossorigin src="/assets/traineeLogin-BxONwPzP.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-P2Xu9kJm.js">
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="card">
+  <p class="brand">Capacity Connect</p>
+  <h2>Trainee Login</h2>
+  <div id="status" class="status"></div>
+  <div id="signin-form">
+    <input type="email" id="email" placeholder="Email Address" />
+    <input type="password" id="password" placeholder="Password" />
+    <button class="btn-primary" id="btnSignIn" onclick="handleSignIn()">Sign In</button>
+    <div class="row-link">
+      <button class="link-btn" onclick="toggleForgot()">Forgot Password?</button>
+    </div>
+    <div class="forgot-panel" id="forgot-panel">
+      <p>Enter your email above, then click the button below. We'll send a reset link instantly.</p>
+      <button class="btn-reset" id="btnReset" onclick="handleForgotPassword()">Send Password Reset Email</button>
+    </div>
+    <div class="divider"><span>OR</span></div>
+    <button class="btn-google" id="btnGoogle" onclick="handleGoogleLogin()">
+      <svg viewBox="0 0 24 24" width="20" height="20">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Continue with Google
+    </button>
+  </div>
+  <a class="back-link" href="index.html">&#8592; Back to Home</a>
+</div>
+<script>
+  const cvs=document.getElementById('bg'),ctx=cvs.getContext('2d');let W,H,stars=[];
+  const resize=()=>{W=cvs.width=innerWidth;H=cvs.height=innerHeight;stars=Array.from({length:Math.floor(W*H/2600)},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.1+0.2,a:Math.random(),da:(Math.random()-0.5)*0.004,spd:Math.random()*0.04+0.006}));};
+  window.addEventListener('resize',resize);resize();
+  (function tick(){ctx.clearRect(0,0,W,H);for(const s of stars){s.a+=s.da;if(s.a<=0||s.a>=1)s.da*=-1;s.y-=s.spd;if(s.y<-2){s.y=H+2;s.x=Math.random()*W;}ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${s.a*0.6})`;ctx.fill();}requestAnimationFrame(tick);})();
+</script>
+</body>
+</html>

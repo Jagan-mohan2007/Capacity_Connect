@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trainer Dashboard - Capacity Connect</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0a0e1a;
+            --accent-teal: #00d4bb;
+            --accent-cyan: #00e5ff;
+            --accent-gold: #f3a14e;
+            --accent-red: #ff5252;
+            --accent-green: #4caf50;
+            --text-main: #fff;
+            --text-muted: rgba(255,255,255,0.5);
+            --sidebar-bg: rgba(8,12,24,0.95);
+            --card-bg: rgba(255,255,255,0.035);
+            --card-border: rgba(255,255,255,0.07);
+            --hover-border: rgba(0, 212, 187, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        #stars-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background-color: var(--sidebar-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 10;
+            border-right: 1px solid var(--card-border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 0;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-main);
+            padding: 0 24px 32px 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--card-border);
+            margin-bottom: 24px;
+        }
+
+        .logo-icon {
+            color: var(--accent-teal);
+        }
+
+        .nav-item {
+            padding: 12px 24px;
+            color: var(--text-muted);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s ease;
+            font-size: 15px;
+        }
+
+        .nav-item:hover {
+            color: var(--text-main);
+            background-color: rgba(255,255,255,0.05);
+        }
+
+        .nav-item.active {
+            color: var(--accent-teal);
+            background-color: rgba(0, 212, 187, 0.1);
+            border-right: 3px solid var(--accent-teal);
+        }
+
+        .spacer {
+            flex-grow: 1;
+        }
+
+        .logout-btn {
+            margin: 0 24px;
+            padding: 12px;
+            background: rgba(255, 82, 82, 0.1);
+            color: var(--accent-red);
+            border: 1px solid rgba(255, 82, 82, 0.3);
+            border-radius: 8px;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            display: block;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 82, 82, 0.2);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            padding: 24px;
+            flex-grow: 1;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            max-width: 1400px;
+        }
+
+        /* Topbar */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .user-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .notification {
+            position: relative;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .notification-dot {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background-color: var(--accent-red);
+            color: white;
+            font-size: 10px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-teal), #007bb5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        /* Cards */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-main);
+        }
+
+        /* Stats Row */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+        }
+        
+        .stat-teal::before { background-color: var(--accent-teal); }
+        .stat-cyan::before { background-color: var(--accent-cyan); }
+        .stat-gold::before { background-color: var(--accent-gold); }
+        .stat-green::before { background-color: var(--accent-green); }
+
+        .stat-title {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stat-sub {
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .sub-up { color: var(--accent-green); }
+        .sub-neutral { color: var(--text-muted); }
+        .sub-warn { color: var(--accent-gold); }
+
+        @keyframes pulse-gold {
+            0% { text-shadow: 0 0 0 rgba(243, 161, 78, 0); }
+            50% { text-shadow: 0 0 15px rgba(243, 161, 78, 0.8); }
+            100% { text-shadow: 0 0 0 rgba(243, 161, 78, 0); }
+        }
+
+        .glow-gold {
+            animation: pulse-gold 2s infinite;
+            color: var(--accent-gold);
+        }
+
+        .stat-flex-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* SVG Circle progress */
+        .svg-progress {
+            width: 60px;
+            height: 60px;
+            transform: rotate(-90deg);
+        }
+        .svg-progress circle {
+            fill: none;
+            stroke-width: 6;
+        }
+        .svg-bg { stroke: rgba(255,255,255,0.1); }
+        .svg-value {
+            stroke: var(--accent-teal);
+            stroke-dasharray: 163; /* 2 * pi * r (26) */
+            stroke-dashoffset: 36; /* 163 * (1 - 0.78) */
+            stroke-linecap: round;
+        }
+        .svg-text-group {
+            position: relative;
+        }
+        .svg-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--text-main);
+        }
+
+        /* Table */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            padding: 12px 16px;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 13px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            font-size: 14px;
+        }
+
+        tr:nth-child(even) td {
+            background-color: rgba(255,255,255,0.02);
+        }
+
+        tr:hover td {
+            background-color: rgba(255,255,255,0.06);
+        }
+
+        .trainee-name {
+            font-weight: 500;
+        }
+
+        .progress-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .progress-bar-bg {
+            height: 6px;
+            width: 100px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        .pb-green { background-color: var(--accent-green); }
+        .pb-gold { background-color: var(--accent-gold); }
+        .pb-red { background-color: var(--accent-red); }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .badge-teal { background: rgba(0, 212, 187, 0.15); color: var(--accent-teal); border: 1px solid rgba(0, 212, 187, 0.3); }
+        .badge-gold { background: rgba(243, 161, 78, 0.15); color: var(--accent-gold); border: 1px solid rgba(243, 161, 78, 0.3); }
+        .badge-red { background: rgba(255, 82, 82, 0.15); color: var(--accent-red); border: 1px solid rgba(255, 82, 82, 0.3); }
+        .badge-green { background: rgba(76, 175, 80, 0.15); color: var(--accent-green); border: 1px solid rgba(76, 175, 80, 0.3); }
+
+        /* Two Columns */
+        .two-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .session-card {
+            background: rgba(255,255,255,0.02);
+            border-left: 3px solid var(--accent-teal);
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .session-card:last-child {
+            margin-bottom: 0;
+        }
+        
+        .session-time {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+        
+        .session-title-text {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .session-attendees {
+            font-size: 13px;
+            color: var(--accent-teal);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .chart-container {
+            height: 300px;
+            position: relative;
+            width: 100%;
+        }
+
+        /* AI Recs */
+        .ai-title {
+            color: var(--accent-teal);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .recs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .rec-card {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .rec-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .rec-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            flex-grow: 1;
+        }
+        
+        .rec-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .btn-assign {
+            background-color: var(--accent-teal);
+            color: #000;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-assign:hover {
+            background-color: #00e0c6;
+            transform: scale(1.02);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .two-cols {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Starfield Background -->
+    <canvas id="stars-bg"></canvas>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <span class="logo-icon">▲</span> Capacity Connect
+        </div>
+        <a href="#" class="nav-item active">📊 Dashboard</a>
+        <a href="#" class="nav-item">📚 My Courses</a>
+        <a href="#" class="nav-item">🧑‍🎓 Trainees</a>
+        <a href="#" class="nav-item">📝 Assessments</a>
+        <a href="#" class="nav-item">📋 Competency Reports</a>
+        <a href="#" class="nav-item">🤖 AI Recommendations</a>
+        
+        <div class="spacer"></div>
+        <a href="trainer-login.html" class="logout-btn">Logout</a>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        
+        <!-- Topbar -->
+        <header class="topbar">
+            <h1 class="page-title">Trainer Dashboard</h1>
+            <div class="user-controls">
+                <div class="notification">
+                    🔔
+                    <span class="notification-dot">5</span>
+                </div>
+                <div class="user-profile">
+                    <div class="avatar">SC</div>
+                    <span style="font-weight: 500;">Dr. Sarah Chen</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Row -->
+        <div class="stats-grid">
+            <div class="card stat-card stat-teal">
+                <div class="stat-title">Total Trainees</div>
+                <div class="stat-value">34</div>
+                <div class="stat-sub sub-up">▲ 6 new</div>
+            </div>
+            
+            <div class="card stat-card stat-cyan">
+                <div class="stat-title">Active Courses</div>
+                <div class="stat-value">6</div>
+                <div class="stat-sub sub-neutral">● 2 starting soon</div>
+            </div>
+
+            <div class="card stat-card stat-gold">
+                <div class="stat-title">Pending Assessments</div>
+                <div class="stat-value"><span class="glow-gold">12</span></div>
+                <div class="stat-sub sub-warn">⚠ Needs attention</div>
+            </div>
+
+            <div class="card stat-card stat-green">
+                <div class="stat-flex-row">
+                    <div>
+                        <div class="stat-title">Avg Competency Score</div>
+                        <div class="stat-value">7.8<span style="font-size:16px;color:var(--text-muted)">/10</span></div>
+                        <div class="stat-sub sub-up">▲ +0.4</div>
+                    </div>
+                    <div class="svg-text-group">
+                        <svg class="svg-progress" viewBox="0 0 60 60">
+                            <circle class="svg-bg" cx="30" cy="30" r="26"></circle>
+                            <circle class="svg-value" cx="30" cy="30" r="26"></circle>
+                        </svg>
+                        <div class="svg-label">78%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assigned Trainees Table -->
+        <div class="card">
+            <h2 class="section-title">Assigned Trainees</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Course</th>
+                            <th>Progress</th>
+                            <th>Competency</th>
+                            <th>Last Active</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="trainee-name">Priya Sharma</td>
+                            <td>Python Basics</td>
+                            <td>
+                                <div class="progress-wrapper">
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill pb-green" style="width: 85%"></div></div>
+                                    <span>85%</span>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-teal">Advanced</span></td>
+                            <td style="color:var(--text-muted)">2h ago</td>
+                        </tr>
+                        <tr>
+                            <td class="trainee-name">Arjun Mehra</td>
+                            <td>Data Science</td>
+                            <td>
+                                <div class="progress-wrapper">
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill pb-gold" style="width: 60%"></div></div>
+                                    <span>60%</span>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-gold">Intermediate</span></td>
+                            <td style="color:var(--text-muted)">1d ago</td>
+                        </tr>
+                        <tr>
+                            <td class="trainee-name">Lisa Wang</td>
+                            <td>Web Development</td>
+                            <td>
+                                <div class="progress-wrapper">
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill pb-red" style="width: 35%"></div></div>
+                                    <span>35%</span>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-red">Beginner</span></td>
+                            <td style="color:var(--text-muted)">3h ago</td>
+                        </tr>
+                        <tr>
+                            <td class="trainee-name">Ravi Patel</td>
+                            <td>Cloud Computing</td>
+                            <td>
+                                <div class="progress-wrapper">
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill pb-green" style="width: 92%"></div></div>
+                                    <span>92%</span>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-teal">Advanced</span></td>
+                            <td style="color:var(--text-muted)">30m ago</td>
+                        </tr>
+                        <tr>
+                            <td class="trainee-name">Sneha Gupta</td>
+                            <td>ML Fundamentals</td>
+                            <td>
+                                <div class="progress-wrapper">
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill pb-gold" style="width: 55%"></div></div>
+                                    <span>55%</span>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-gold">Intermediate</span></td>
+                            <td style="color:var(--text-muted)">5h ago</td>
+                        </tr>
+                        <tr>
+                            <td class="trainee-name">James Wilson</td>
+                            <td>DevOps</td>
+                            <td>
+                                <div class="progress-wrapper">
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill pb-green" style="width: 78%"></div></div>
+                                    <span>78%</span>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-teal">Advanced</span></td>
+                            <td style="color:var(--text-muted)">1h ago</td>
+                        </tr>
+                        <tr>
+                            <td class="trainee-name">Ananya Roy</td>
+                            <td>Cybersecurity</td>
+                            <td>
+                                <div class="progress-wrapper">
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill pb-red" style="width: 20%"></div></div>
+                                    <span>20%</span>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-red">Beginner</span></td>
+                            <td style="color:var(--text-muted)">2d ago</td>
+                        </tr>
+                        <tr>
+                            <td class="trainee-name">Carlos Rivera</td>
+                            <td>AI Ethics</td>
+                            <td>
+                                <div class="progress-wrapper">
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill pb-gold" style="width: 68%"></div></div>
+                                    <span>68%</span>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-gold">Intermediate</span></td>
+                            <td style="color:var(--text-muted)">4h ago</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Two Columns -->
+        <div class="two-cols">
+            <!-- Upcoming Sessions -->
+            <div class="card">
+                <h2 class="section-title">Upcoming Sessions</h2>
+                
+                <div class="session-card">
+                    <div class="session-time">Sep 30, 10:00 AM</div>
+                    <div class="session-title-text">Python Basics Review</div>
+                    <div class="session-attendees">👥 12 attendees</div>
+                </div>
+                
+                <div class="session-card">
+                    <div class="session-time">Oct 1, 2:00 PM</div>
+                    <div class="session-title-text">Data Science Lab</div>
+                    <div class="session-attendees">👥 8 attendees</div>
+                </div>
+
+                <div class="session-card">
+                    <div class="session-time">Oct 3, 11:00 AM</div>
+                    <div class="session-title-text">ML Workshop</div>
+                    <div class="session-attendees">👥 15 attendees</div>
+                </div>
+
+                <div class="session-card">
+                    <div class="session-time">Oct 5, 9:00 AM</div>
+                    <div class="session-title-text">Cloud Certification Prep</div>
+                    <div class="session-attendees">👥 10 attendees</div>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="card">
+                <h2 class="section-title">Competency Progress Overview</h2>
+                <div class="chart-container">
+                    <canvas id="competencyChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Recommendations -->
+        <div class="card" style="border-color: rgba(0, 212, 187, 0.3);">
+            <h2 class="section-title ai-title">🤖 AI-Powered Recommendations</h2>
+            <div class="recs-grid">
+                
+                <div class="card rec-card">
+                    <div class="rec-title">🔬 Advanced Python for Data Science</div>
+                    <div class="rec-desc">Targeted path for trainees in data manipulation</div>
+                    <div class="rec-meta">
+                        <span class="badge badge-teal">Advanced</span>
+                        <button class="btn-assign">Assign to Trainees</button>
+                    </div>
+                </div>
+
+                <div class="card rec-card">
+                    <div class="rec-title">📊 Business Analytics Essentials</div>
+                    <div class="rec-desc">Foundational course for improving analytical skills</div>
+                    <div class="rec-meta">
+                        <span class="badge badge-gold">Intermediate</span>
+                        <button class="btn-assign">Assign to Trainees</button>
+                    </div>
+                </div>
+
+                <div class="card rec-card">
+                    <div class="rec-title">🛡️ Cybersecurity Fundamentals</div>
+                    <div class="rec-desc">Essential security training for all team members</div>
+                    <div class="rec-meta">
+                        <span class="badge badge-green">Beginner</span>
+                        <button class="btn-assign">Assign to Trainees</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Scripts -->
+    <script>
+        // Chart.js initialization
+        const ctx = document.getElementById('competencyChart').getContext('2d');
+        
+        Chart.defaults.color = 'rgba(255, 255, 255, 0.5)';
+        Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Technical Skills', 'Communication', 'Problem Solving', 'Leadership', 'Teamwork'],
+                datasets: [{
+                    label: 'Competency Score (%)',
+                    data: [78, 65, 82, 58, 71],
+                    backgroundColor: [
+                        '#00d4bb',
+                        '#f3a14e',
+                        '#00d4bb',
+                        '#f3a14e',
+                        '#00d4bb'
+                    ],
+                    borderRadius: 4,
+                    barPercentage: 0.6
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(8, 12, 24, 0.9)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.06)'
+                        },
+                        max: 100
+                    },
+                    y: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Starfield Background
+        const _c = document.getElementById('stars-bg'), _x = _c.getContext('2d');
+        let _W, _H, _s = [];
+        function _r() {
+            _W = _c.width = innerWidth;
+            _H = _c.height = innerHeight;
+            _s = Array.from({length: Math.floor(_W * _H / 3200)}, () => ({
+                x: Math.random() * _W,
+                y: Math.random() * _H,
+                r: Math.random() * 1.1 + 0.2,
+                a: Math.random(),
+                d: (Math.random() - 0.5) * 0.003,
+                v: Math.random() * 0.03 + 0.005
+            }));
+        }
+        addEventListener('resize', _r);
+        _r();
+        (function _t() {
+            _x.clearRect(0, 0, _W, _H);
+            for (const s of _s) {
+                s.a += s.d;
+                if (s.a <= 0 || s.a >= 1) s.d *= -1;
+                s.y -= s.v;
+                if (s.y < -2) {
+                    s.y = _H + 2;
+                    s.x = Math.random() * _W;
+                }
+                _x.beginPath();
+                _x.arc(s.x, s.y, s.r, 0, 6.28);
+                _x.fillStyle = `rgba(255, 255, 255, ${s.a * 0.55})`;
+                _x.fill();
+            }
+            requestAnimationFrame(_t);
+        })();
+    </script>
+</body>
+</html>

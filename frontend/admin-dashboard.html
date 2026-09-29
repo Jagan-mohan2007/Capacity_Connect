@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Capacity Connect</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg: #0a0e1a;
+            --sidebar-bg: rgba(8, 12, 24, 0.95);
+            --card-bg: rgba(255, 255, 255, 0.035);
+            --card-border: rgba(255, 255, 255, 0.07);
+            --teal: #00d4bb;
+            --cyan: #00e5ff;
+            --gold: #f3a14e;
+            --green: #00e676;
+            --red: #f44336;
+            --text-main: #fff;
+            --text-muted: rgba(255, 255, 255, 0.5);
+            --sidebar-width: 250px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        #stars-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            display: block;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid var(--card-border);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--teal);
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .nav-items {
+            flex: 1;
+            padding: 24px 0;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 24px;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid var(--teal);
+        }
+        
+        .nav-item:not(.active) {
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item span {
+            margin-right: 12px;
+            font-size: 1.2rem;
+        }
+
+        .sidebar-footer {
+            padding: 24px;
+            border-top: 1px solid var(--card-border);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .top-right {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .notification {
+            position: relative;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .notification .dot {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 8px;
+            height: 8px;
+            background: var(--red);
+            border-radius: 50%;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: var(--teal);
+        }
+
+        /* Cards */
+        .card-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.25s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .stat-card {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stat-title {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .stat-trend {
+            font-size: 13px;
+        }
+
+        /* Specific border lefts */
+        .stat-card:nth-child(1) { border-left: 4px solid var(--teal); }
+        .stat-card:nth-child(2) { border-left: 4px solid var(--cyan); }
+        .stat-card:nth-child(3) { border-left: 4px solid var(--gold); }
+        .stat-card:nth-child(4) { border-left: 4px solid var(--green); }
+
+        /* Flex Rows */
+        .flex-row {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .flex-half {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-muted);
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+
+        tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge.green { background: rgba(0, 230, 118, 0.1); color: var(--green); }
+        .badge.gold { background: rgba(243, 161, 78, 0.1); color: var(--gold); }
+        .badge.red { background: rgba(244, 67, 54, 0.1); color: var(--red); }
+
+        /* Lists */
+        .list-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-item-content {
+            flex: 1;
+        }
+
+        .list-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .list-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .star-rating {
+            color: var(--gold);
+        }
+
+        /* Activity Feed */
+        .activity-item {
+            display: flex;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-time {
+            font-size: 13px;
+            color: var(--text-muted);
+            min-width: 60px;
+        }
+
+        .activity-desc {
+            font-size: 14px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            Capacity Connect
+        </div>
+        <div class="nav-items">
+            <a href="#" class="nav-item active"><span>📊</span> Dashboard</a>
+            <a href="#" class="nav-item"><span>👥</span> Users</a>
+            <a href="#" class="nav-item"><span>🎓</span> Trainers</a>
+            <a href="#" class="nav-item"><span>🧑‍🎓</span> Trainees</a>
+            <a href="#" class="nav-item"><span>📚</span> Courses</a>
+            <a href="#" class="nav-item"><span>📝</span> Assessments</a>
+            <a href="#" class="nav-item"><span>📈</span> Analytics</a>
+            <a href="#" class="nav-item"><span>⚙️</span> Settings</a>
+        </div>
+        <div class="sidebar-footer">
+            <a href="admin-login.html" class="nav-item" style="padding:0"><span>🚪</span> Logout</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div class="page-title">Dashboard</div>
+            <div class="top-right">
+                <div class="notification">
+                    🔔
+                    <div class="dot"></div>
+                </div>
+                <div class="user-profile">
+                    <div class="avatar">ER</div>
+                    <div>
+                        <div>Elena Rodriguez</div>
+                        <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Platform Admin</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-row">
+            <div class="card stat-card">
+                <div class="stat-title">Total Trainers</div>
+                <div class="stat-value">48</div>
+                <div class="stat-trend" style="color: var(--teal)">▲ 12% this month</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-title">Total Trainees</div>
+                <div class="stat-value">312</div>
+                <div class="stat-trend" style="color: var(--cyan)">▲ 8% this month</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-title">Active Courses</div>
+                <div class="stat-value">24</div>
+                <div class="stat-trend" style="color: var(--gold)">▲ 3 new</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-title">Completed Assessments</div>
+                <div class="stat-value">1,847</div>
+                <div class="stat-trend" style="color: var(--green)">▲ 156 this week</div>
+            </div>
+        </div>
+
+        <div class="flex-row">
+            <div class="card flex-half">
+                <div class="section-title">User Growth</div>
+                <div style="position: relative; height: 250px; width: 100%;">
+                    <canvas id="userGrowthChart"></canvas>
+                </div>
+            </div>
+            <div class="card flex-half">
+                <div class="section-title">Course Completion Rate</div>
+                <div style="position: relative; height: 250px; width: 100%; display: flex; justify-content: center;">
+                    <div style="position: relative; width: 250px; height: 100%;">
+                        <canvas id="completionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-row">
+            <div class="card flex-half">
+                <div class="section-title">Recent Registrations</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Priya Sharma</td><td>priya@email.com</td><td>Trainee</td><td>Sep 28 2026</td></tr>
+                        <tr><td>Arjun Patel</td><td>arjun@email.com</td><td>Trainer</td><td>Sep 27 2026</td></tr>
+                        <tr><td>Lisa Chen</td><td>lisa@email.com</td><td>Trainee</td><td>Sep 26 2026</td></tr>
+                        <tr><td>Ravi Kumar</td><td>ravi@email.com</td><td>Trainee</td><td>Sep 25 2026</td></tr>
+                        <tr><td>Maya Singh</td><td>maya@email.com</td><td>Trainer</td><td>Sep 24 2026</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card flex-half">
+                <div class="section-title">Recent Assessments</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Trainee</th>
+                            <th>Course</th>
+                            <th>Score</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Priya S.</td><td>Python Basics</td><td>87%</td><td><span class="badge green">Passed</span></td></tr>
+                        <tr><td>Arjun P.</td><td>Data Science</td><td>62%</td><td><span class="badge gold">Needs Improvement</span></td></tr>
+                        <tr><td>Lisa C.</td><td>Web Dev</td><td>91%</td><td><span class="badge green">Passed</span></td></tr>
+                        <tr><td>Ravi K.</td><td>Cloud Computing</td><td>45%</td><td><span class="badge red">Failed</span></td></tr>
+                        <tr><td>Maya S.</td><td>ML Fundamentals</td><td>78%</td><td><span class="badge green">Passed</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="flex-row">
+            <div class="card flex-half">
+                <div class="section-title">Top Performing Trainers</div>
+                <div class="list-item">
+                    <div class="avatar">SC</div>
+                    <div class="list-item-content">
+                        <div class="list-title">Dr. Sarah Chen</div>
+                        <div class="list-subtitle">34 trainees</div>
+                    </div>
+                    <div class="star-rating">★ 4.9</div>
+                </div>
+                <div class="list-item">
+                    <div class="avatar">RK</div>
+                    <div class="list-item-content">
+                        <div class="list-title">Rajesh Kumar</div>
+                        <div class="list-subtitle">28 trainees</div>
+                    </div>
+                    <div class="star-rating">★ 4.8</div>
+                </div>
+                <div class="list-item">
+                    <div class="avatar">AJ</div>
+                    <div class="list-item-content">
+                        <div class="list-title">Amanda Jones</div>
+                        <div class="list-subtitle">31 trainees</div>
+                    </div>
+                    <div class="star-rating">★ 4.7</div>
+                </div>
+                <div class="list-item">
+                    <div class="avatar">MP</div>
+                    <div class="list-item-content">
+                        <div class="list-title">Dr. Michael Park</div>
+                        <div class="list-subtitle">22 trainees</div>
+                    </div>
+                    <div class="star-rating">★ 4.6</div>
+                </div>
+                <div class="list-item">
+                    <div class="avatar">NK</div>
+                    <div class="list-item-content">
+                        <div class="list-title">Neha Kapoor</div>
+                        <div class="list-subtitle">19 trainees</div>
+                    </div>
+                    <div class="star-rating">★ 4.5</div>
+                </div>
+            </div>
+            <div class="card flex-half">
+                <div class="section-title">Platform Activity Feed</div>
+                <div class="activity-item">
+                    <div class="activity-time">2m ago</div>
+                    <div class="activity-desc">Priya Sharma completed Python Basics assessment</div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-time">15m ago</div>
+                    <div class="activity-desc">New trainer Arjun Patel registered</div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-time">1h ago</div>
+                    <div class="activity-desc">Course 'Advanced ML' was updated</div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-time">2h ago</div>
+                    <div class="activity-desc">12 trainees enrolled in Cloud Computing</div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-time">3h ago</div>
+                    <div class="activity-desc">Assessment results published for Web Dev</div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-time">5h ago</div>
+                    <div class="activity-desc">System maintenance completed</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chart.js global defaults
+        Chart.defaults.color = 'rgba(255, 255, 255, 0.5)';
+        Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+
+        // Line Chart
+        const userCtx = document.getElementById('userGrowthChart').getContext('2d');
+        new Chart(userCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Total Users',
+                    data: [120, 185, 240, 310, 380, 450],
+                    borderColor: '#00d4bb',
+                    backgroundColor: 'rgba(0, 212, 187, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { grid: { color: 'rgba(255, 255, 255, 0.06)' } },
+                    y: { grid: { color: 'rgba(255, 255, 255, 0.06)' }, beginAtZero: true }
+                }
+            }
+        });
+
+        // Doughnut Chart
+        const compCtx = document.getElementById('completionChart').getContext('2d');
+        new Chart(compCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Completed', 'In Progress', 'Not Started'],
+                datasets: [{
+                    data: [72, 18, 10],
+                    backgroundColor: ['#00d4bb', '#f3a14e', 'rgba(255, 255, 255, 0.15)'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%',
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    </script>
+
+    <canvas id="stars-bg"></canvas>
+    <script>
+        const _c=document.getElementById('stars-bg'),_x=_c.getContext('2d');let _W,_H,_s=[];
+        function _r(){_W=_c.width=innerWidth;_H=_c.height=innerHeight;_s=Array.from({length:Math.floor(_W*_H/3200)},()=>({x:Math.random()*_W,y:Math.random()*_H,r:Math.random()*1.1+0.2,a:Math.random(),d:(Math.random()-0.5)*0.003,v:Math.random()*0.03+0.005}));}
+        addEventListener('resize',_r);_r();
+        (function _t(){_x.clearRect(0,0,_W,_H);for(const s of _s){s.a+=s.d;if(s.a<=0||s.a>=1)s.d*=-1;s.y-=s.v;if(s.y<-2){s.y=_H+2;s.x=Math.random()*_W;}_x.beginPath();_x.arc(s.x,s.y,s.r,0,6.28);_x.fillStyle=`rgba(255,255,255,${s.a*0.55})`;_x.fill();}requestAnimationFrame(_t);})();
+    </script>
+</body>
+</html>

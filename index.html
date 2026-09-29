@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capacity Connect</title>
+<style>
+/* ============================================================
+   RESET & ROOT
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --teal:   #00d4bb;
+  --gold:   #f3a14e;
+  --white:  #ffffff;
+  --bg:     #000000;
+}
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Helvetica, Arial, sans-serif;
+  overflow: hidden;
+  color: var(--white);
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   START SCREEN
+   ============================================================ */
+#start-screen {
+  position: fixed; inset: 0;
+  background: #000;
+  z-index: 1000;
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+  gap: 28px;
+  transition: opacity 1.2s ease;
+}
+#start-screen h1 {
+  font-size: 1rem; letter-spacing: 0.5em;
+  color: rgba(255,255,255,0.3); font-weight: 200;
+  text-transform: uppercase;
+}
+.start-btn {
+  border: 1px solid rgba(255,255,255,0.25);
+  background: transparent;
+  color: #fff;
+  font-size: 0.85rem; letter-spacing: 0.25em;
+  text-transform: uppercase;
+  padding: 14px 40px;
+  border-radius: 60px;
+  cursor: pointer;
+  transition: all 0.4s;
+}
+.start-btn:hover {
+  background: #fff; color: #000;
+  box-shadow: 0 0 30px rgba(255,255,255,0.4);
+}
+
+/* ============================================================
+   LAYERS
+   ============================================================ */
+/* Canvas lives at the very back */
+#canvas-bg {
+  position: fixed; inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+/* Vignette overlay — always on top of canvas */
+.vignette {
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at center,
+    transparent 55%, rgba(0,0,0,0.75) 100%);
+  z-index: 1; pointer-events: none;
+}
+/* Cinematic letterbox bars */
+.bar { position: fixed; left: 0; width: 100%; z-index: 90; pointer-events: none;
+  background: #000; height: 0; transition: height 0.8s cubic-bezier(.4,0,.2,1); }
+.bar-top { top: 0; }
+.bar-bot { bottom: 0; }
+.bar.open { height: 10vh; }
+
+/* Scanline texture */
+.scanlines {
+  position: fixed; inset: 0; z-index: 2; pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 2px);
+}
+/* Shockwave ring */
+.shockwave {
+  position: fixed; z-index: 95; pointer-events: none;
+  border-radius: 50%;
+  width: 10px; height: 10px;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%) scale(0);
+  border: 2px solid rgba(255,255,255,0.8);
+  box-shadow: 0 0 20px var(--teal), inset 0 0 20px rgba(0,212,187,0.3);
+  opacity: 0;
+}
+/* Light rays around logo */
+#light-rays {
+  position: fixed; inset: 0; z-index: 3; pointer-events: none;
+  opacity: 0;
+  background: conic-gradient(
+    from 0deg at 50% 50%,
+    transparent 0deg, rgba(255,255,255,0.03) 5deg, transparent 10deg,
+    transparent 25deg, rgba(243,161,78,0.04) 30deg, transparent 35deg,
+    transparent 50deg, rgba(255,255,255,0.02) 55deg, transparent 60deg,
+    transparent 75deg, rgba(0,212,187,0.04) 80deg, transparent 85deg,
+    transparent 100deg, rgba(255,255,255,0.03) 105deg, transparent 110deg,
+    transparent 130deg, rgba(243,161,78,0.03) 135deg, transparent 140deg,
+    transparent 165deg, rgba(255,255,255,0.02) 170deg, transparent 175deg,
+    transparent 200deg, rgba(0,212,187,0.03) 205deg, transparent 210deg,
+    transparent 240deg, rgba(255,255,255,0.02) 245deg, transparent 250deg,
+    transparent 280deg, rgba(243,161,78,0.03) 285deg, transparent 290deg,
+    transparent 320deg, rgba(0,212,187,0.03) 325deg, transparent 330deg,
+    transparent 355deg, rgba(255,255,255,0.02) 360deg
+  );
+  animation: rayRotate 18s linear infinite;
+}
+@keyframes rayRotate { to { transform: rotate(360deg); } }
+
+/* ============================================================
+   SCENE CONTAINER
+   ============================================================ */
+#scene-container {
+  position: fixed; inset: 0; z-index: 10;
+}
+.scene {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 1.4s cubic-bezier(.16,1,.3,1);
+}
+.scene.active { opacity: 1; pointer-events: auto; }
+
+/* ============================================================
+   SCENE 1 — opening quote
+   ============================================================ */
+.s1-line {
+  width: 40px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--teal), transparent);
+  margin: 0 auto 30px;
+  opacity: 0; transform: scaleX(0);
+}
+#scene-1 h2 {
+  font-size: clamp(1.6rem, 4vw, 3rem);
+  font-weight: 200; letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.92);
+  opacity: 0; filter: blur(12px);
+}
+#scene-1 .subtitle {
+  margin-top: 18px;
+  font-size: clamp(0.7rem, 1.2vw, 0.85rem);
+  letter-spacing: 0.4em; text-transform: uppercase;
+  color: rgba(255,255,255,0.3); font-weight: 300;
+  opacity: 0;
+}
+
+/* ============================================================
+   SCENE 2 — pathway icons
+   ============================================================ */
+.pathway-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: min(900px, 88vw);
+  margin-bottom: 3.5rem;
+}
+/* The horizontal track (behind icons) */
+.track {
+  position: absolute;
+  top: 50%;
+  left: 0; right: 0;
+  height: 1px;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.05);
+}
+/* Animated glow line that draws across */
+.track-fill {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 0;
+  height: 1px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, var(--teal), var(--gold));
+  box-shadow: 0 0 8px var(--teal), 0 0 16px rgba(0,212,187,0.5);
+}
+/* Each icon node sits ON the line with equal spacing */
+.node-wrap {
+  position: relative; z-index: 2;
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 14px;
+  opacity: 0; transform: translateY(18px);
+}
+.node-circle {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  display: flex; justify-content: center; align-items: center;
+  color: rgba(255,255,255,0.4);
+  transition: all 0.6s cubic-bezier(.16,1,.3,1);
+  box-shadow: 0 0 0 4px #000; /* knockout around circle hides track line */
+}
+.node-circle.lit {
+  color: var(--teal);
+  border-color: rgba(0,212,187,0.4);
+  box-shadow: 0 0 0 4px #000, 0 0 18px rgba(0,212,187,0.35);
+}
+.node-circle svg {
+  width: 22px; height: 22px;
+  stroke: currentColor; stroke-width: 1.5;
+  fill: none; stroke-linecap: round; stroke-linejoin: round;
+}
+.node-label {
+  font-size: 0.7rem; letter-spacing: 0.2em;
+  text-transform: uppercase; color: rgba(255,255,255,0.35);
+  font-weight: 300; white-space: nowrap;
+  transition: color 0.5s;
+}
+.node-wrap.lit .node-label { color: rgba(255,255,255,0.65); }
+
+.s2-headline {
+  font-size: clamp(1.4rem, 3.5vw, 2.4rem);
+  font-weight: 200; letter-spacing: 0.2em;
+  color: rgba(255,255,255,0.88);
+  opacity: 0; transform: translateY(14px);
+}
+
+/* ============================================================
+   SCENE 3-4 — ecosystem cards + convergence
+   ============================================================ */
+.cards-stage {
+  position: relative;
+  width: 100%; height: 55vh;
+  display: flex; justify-content: center; align-items: center;
+}
+.gcard {
+  position: absolute;
+  width: clamp(170px, 20vw, 240px);
+  padding: 2rem 1.25rem;
+  background: rgba(255,255,255,0.015);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  text-align: center;
+  opacity: 0;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+.gcard .card-num {
+  font-size: 0.65rem; letter-spacing: 0.25em;
+  color: var(--teal); text-transform: uppercase;
+  margin-bottom: 10px; display: block;
+}
+.gcard .card-title {
+  font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+  font-weight: 300; letter-spacing: 0.05em;
+  color: rgba(255,255,255,0.85); line-height: 1.5;
+}
+/* card positions — relative to center */
+.gc1 { --tx: -310px; --ty: -105px; }
+.gc2 { --tx:  310px; --ty: -105px; }
+.gc3 { --tx: -155px; --ty:  120px; }
+.gc4 { --tx:  155px; --ty:  120px; }
+
+@keyframes cardFloat {
+  0%,100% { transform: translate(var(--tx),var(--ty)) translateY(0); }
+  50%      { transform: translate(var(--tx),var(--ty)) translateY(-10px); }
+}
+
+.platform-text {
+  position: absolute; bottom: 12%;
+  font-size: clamp(1rem, 2.5vw, 1.7rem);
+  font-weight: 200; letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.9);
+  opacity: 0; transform: translateY(12px);
+}
+.supernova {
+  position: absolute;
+  width: 0; height: 0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 200px 100px var(--teal), 0 0 400px 200px #fff;
+  opacity: 0; z-index: 20;
+  pointer-events: none;
+}
+
+/* ============================================================
+   SCENE 5 — LOGO REVEAL
+   ============================================================ */
+#scene-5 {
+  flex-direction: column; gap: 0;
+}
+.emblem-wrap {
+  opacity: 0;
+  filter: blur(20px);
+  transform: scale(0.85) translateY(20px);
+}
+/* SVG emblem sizing */
+.logo-emblem {
+  width: clamp(140px, 18vw, 200px);
+  height: auto;
+  display: block;
+  margin: 0 auto 2.5rem;
+  filter: drop-shadow(0 0 20px rgba(0,212,187,0.5))
+          drop-shadow(0 0 40px rgba(243,161,78,0.3));
+}
+.brand-name {
+  text-align: center;
+  opacity: 0;
+  transform: translateY(14px);
+}
+.brand-name .cap {
+  display: block;
+  font-size: clamp(2rem, 5vw, 3.8rem);
+  font-weight: 300; letter-spacing: 0.2em;
+  background: linear-gradient(90deg, #fff 0%, #f3a14e 60%, #fff 100%);
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 4s linear infinite;
+}
+.brand-name .con {
+  display: block;
+  font-size: clamp(0.75rem, 1.5vw, 1rem);
+  letter-spacing: 0.55em; text-transform: uppercase;
+  color: var(--teal); font-weight: 300;
+  margin-top: 6px;
+}
+.brand-tagline {
+  margin-top: 22px;
+  font-size: clamp(0.65rem, 1.2vw, 0.8rem);
+  letter-spacing: 0.3em; text-transform: uppercase;
+  color: rgba(255,255,255,0.3); font-weight: 300;
+  opacity: 0;
+}
+@keyframes shimmer {
+  0%   { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+/* Halo ring behind emblem */
+.halo {
+  position: absolute;
+  width: 260px; height: 260px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,212,187,0.12);
+  box-shadow: 0 0 60px rgba(0,212,187,0.08), inset 0 0 60px rgba(243,161,78,0.05);
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+  opacity: 0; animation: pulse-halo 3s ease-in-out infinite;
+}
+.halo2 {
+  position: absolute;
+  width: 400px; height: 400px;
+  border-radius: 50%;
+  border: 1px solid rgba(243,161,78,0.07);
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+  opacity: 0; animation: pulse-halo 3s 1s ease-in-out infinite;
+}
+@keyframes pulse-halo {
+  0%,100% { opacity: 0.4; transform: translate(-50%,-50%) scale(1); }
+  50%      { opacity: 0.8; transform: translate(-50%,-50%) scale(1.02); }
+}
+
+/* ============================================================
+   REPLAY
+   ============================================================ */
+#replay-btn {
+  position: fixed; bottom: 28px; right: 32px; z-index: 200;
+  background: transparent; border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.5); font-size: 0.72rem; letter-spacing: 0.2em;
+  text-transform: uppercase; padding: 10px 22px; border-radius: 50px;
+  cursor: pointer; opacity: 0; pointer-events: none;
+  transition: all 0.4s;
+}
+#replay-btn.show { opacity: 1; pointer-events: auto; }
+#replay-btn:hover { color: #fff; border-color: rgba(255,255,255,0.5);
+  box-shadow: 0 0 20px rgba(0,212,187,0.2); }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .pathway-wrap { gap: 0; }
+  .node-circle { width: 42px; height: 42px; }
+  .node-circle svg { width: 18px; height: 18px; }
+  .node-label { font-size: 0.58rem; }
+  .gc1 { --tx: -120px; --ty: -140px; }
+  .gc2 { --tx:  120px; --ty: -140px; }
+  .gc3 { --tx: -120px; --ty:  60px;  }
+  .gc4 { --tx:  120px; --ty:  60px;  }
+  .gcard { width: 145px; padding: 1.2rem 0.8rem; }
+  .halo  { width: 200px; height: 200px; }
+  .halo2 { width: 300px; height: 300px; }
+}
+</style>
+</head>
+<body>
+
+<!-- START OVERLAY -->
+<div id="start-screen">
+  <h1>Capacity Connect</h1>
+  <button class="start-btn" onclick="boot()">▶ &nbsp; Play Intro</button>
+</div>
+
+<!-- BG CANVAS (starfield + nebula) -->
+<canvas id="canvas-bg"></canvas>
+
+<!-- LAYERED EFFECTS -->
+<div class="vignette"></div>
+<div class="scanlines"></div>
+<div id="light-rays"></div>
+<div class="bar bar-top" id="bar-t"></div>
+<div class="bar bar-bot" id="bar-b"></div>
+
+<!-- SHOCKWAVE (injected by JS) -->
+
+<!-- SCENES -->
+<div id="scene-container">
+
+  <!-- S1: Opening -->
+  <div class="scene" id="s1">
+    <div class="s1-line" id="s1-line"></div>
+    <h2 id="s1-quote">Every individual has potential</h2>
+    <p class="subtitle" id="s1-sub">Capacity Connect &nbsp;·&nbsp; 2024</p>
+  </div>
+
+  <!-- S2: Pathway -->
+  <div class="scene" id="s2">
+    <div class="pathway-wrap" id="pathway-wrap">
+      <div class="track"></div>
+      <div class="track-fill" id="track-fill"></div>
+
+      <div class="node-wrap" id="n0">
+        <div class="node-circle" id="nc0">
+          <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><rect x="3" y="5" width="18" height="16" rx="2"/></svg>
+        </div>
+        <span class="node-label">Assessment</span>
+      </div>
+
+      <div class="node-wrap" id="n1">
+        <div class="node-circle" id="nc1">
+          <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        </div>
+        <span class="node-label">Learning</span>
+      </div>
+
+      <div class="node-wrap" id="n2">
+        <div class="node-circle" id="nc2">
+          <svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        </div>
+        <span class="node-label">Growth</span>
+      </div>
+
+      <div class="node-wrap" id="n3">
+        <div class="node-circle" id="nc3">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        </div>
+        <span class="node-label">Mentorship</span>
+      </div>
+
+      <div class="node-wrap" id="n4">
+        <div class="node-circle" id="nc4">
+          <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <span class="node-label">Achievement</span>
+      </div>
+    </div>
+    <p class="s2-headline" id="s2-hl">Assess.&nbsp; Connect.&nbsp; Grow.</p>
+  </div>
+
+  <!-- S3-4: Cards + Convergence -->
+  <div class="scene" id="s34">
+    <div class="cards-stage">
+      <div class="gcard gc1" id="gc1"><span class="card-num">01</span><span class="card-title">Competency Assessment</span></div>
+      <div class="gcard gc2" id="gc2"><span class="card-num">02</span><span class="card-title">Trainer Matching</span></div>
+      <div class="gcard gc3" id="gc3"><span class="card-num">03</span><span class="card-title">Learning Pathways</span></div>
+      <div class="gcard gc4" id="gc4"><span class="card-num">04</span><span class="card-title">Progress Tracking</span></div>
+      <div class="supernova" id="supernova"></div>
+    </div>
+    <p class="platform-text" id="platform-text">AI-Assisted Capacity Building Platform</p>
+  </div>
+
+  <!-- S5: Logo Reveal -->
+  <div class="scene" id="s5">
+    <div style="position:relative; display:flex; flex-direction:column; align-items:center;">
+      <div class="halo"  id="halo1"></div>
+      <div class="halo2" id="halo2"></div>
+      <div class="emblem-wrap" id="emblem-wrap">
+
+        <!-- ===== SVG EMBLEM — pure vector, no background ===== -->
+        <svg class="logo-emblem" viewBox="0 0 120 160" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <!-- Teal gradient for left swoosh -->
+            <linearGradient id="tg" x1="0%" y1="0%" x2="80%" y2="100%">
+              <stop offset="0%"   stop-color="#00e5cc"/>
+              <stop offset="100%" stop-color="#007060"/>
+            </linearGradient>
+            <!-- Gold gradient for right swoosh -->
+            <linearGradient id="gg" x1="100%" y1="0%" x2="20%" y2="100%">
+              <stop offset="0%"   stop-color="#ffe08a"/>
+              <stop offset="100%" stop-color="#c06418"/>
+            </linearGradient>
+            <!-- Sphere sheen -->
+            <radialGradient id="sg" cx="35%" cy="25%" r="75%">
+              <stop offset="0%"   stop-color="#fff8d0"/>
+              <stop offset="50%"  stop-color="#f3a14e"/>
+              <stop offset="100%" stop-color="#8a3c08"/>
+            </radialGradient>
+            <!-- Soft glow filter -->
+            <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <!-- ── GOLD right-side swoosh (behind teal) ── -->
+          <!--
+            This path traces the outer edge of the right ribbon:
+            Starts at bottom-center, swoops up-right, arcs back through the top.
+          -->
+          <path filter="url(#glow)"
+            d="
+              M 62 148
+              C 75 120, 100 95, 95 58
+              C 90 28, 72 15, 63 22
+              C 74 30, 82 50, 76 82
+              C 71 108, 60 128, 62 148 Z
+            "
+            fill="url(#gg)" opacity="0.95"/>
+
+          <!-- ── TEAL left-side swoosh (in front of gold at bottom) ── -->
+          <path filter="url(#glow)"
+            d="
+              M 58 148
+              C 45 120, 20 95, 25 58
+              C 30 28, 48 15, 57 22
+              C 46 30, 38 50, 44 82
+              C 49 108, 60 128, 58 148 Z
+            "
+            fill="url(#tg)" opacity="0.95"/>
+
+          <!-- ── Gold sphere head ── -->
+          <circle cx="60" cy="20" r="11" fill="url(#sg)" filter="url(#glow)"/>
+
+          <!-- subtle inner highlight on sphere -->
+          <ellipse cx="56" cy="16" rx="4" ry="3"
+            fill="rgba(255,255,255,0.35)" transform="rotate(-20 56 16)"/>
+        </svg>
+        <!-- ===== END EMBLEM ===== -->
+
+        <div class="brand-name" id="brand-name">
+          <span class="cap">Capacity</span>
+          <span class="con">Connect</span>
+        </div>
+        <p class="brand-tagline" id="brand-tagline">
+          Building Competence &nbsp;·&nbsp; Enabling Growth
+        </p>
+
+      </div>
+    </div>
+  </div>
+
+</div><!-- end scene-container -->
+
+<button id="replay-btn" onclick="replayIntro()">↺ &nbsp;Replay</button>
+
+<!-- ============================================================
+     CANVAS PARTICLE EMITTER (for burst on reveal)
+     ============================================================ -->
+<canvas id="particle-canvas"
+  style="position:fixed;inset:0;z-index:50;pointer-events:none;"></canvas>
+
+<script>
+/* ============================================================
+   CANVAS A — STARFIELD + NEBULA BG
+   ============================================================ */
+(function initStarfield() {
+  const cvs = document.getElementById('canvas-bg');
+  const ctx = cvs.getContext('2d');
+  let W, H, stars = [], nebula = [];
+
+  function resize() {
+    W = cvs.width  = window.innerWidth;
+    H = cvs.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function mkStars() {
+    stars = [];
+    const N = Math.floor(W * H / 3000);
+    for (let i = 0; i < N; i++) {
+      stars.push({
+        x: Math.random() * W, y: Math.random() * H,
+        r: Math.random() * 1.1 + 0.2,
+        a: Math.random(),
+        da: (Math.random() - 0.5) * 0.004,
+        spd: Math.random() * 0.06 + 0.01
+      });
+    }
+    // nebula blobs
+    nebula = [];
+    for (let i = 0; i < 6; i++) {
+      nebula.push({
+        x: Math.random() * W, y: Math.random() * H,
+        r: 120 + Math.random() * 180,
+        hue: Math.random() > 0.5 ? 180 : 35, // teal or gold
+        a: 0.04 + Math.random() * 0.06,
+        dx: (Math.random() - 0.5) * 0.15,
+        dy: (Math.random() - 0.5) * 0.1
+      });
+    }
+  }
+  mkStars();
+  window.addEventListener('resize', mkStars);
+
+  function drawBg() {
+    ctx.clearRect(0, 0, W, H);
+
+    // nebula clouds
+    for (const n of nebula) {
+      n.x += n.dx; n.y += n.dy;
+      if (n.x < -n.r) n.x = W + n.r;
+      if (n.x > W + n.r) n.x = -n.r;
+      if (n.y < -n.r) n.y = H + n.r;
+      if (n.y > H + n.r) n.y = -n.r;
+      const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r);
+      g.addColorStop(0,   `hsla(${n.hue},80%,55%,${n.a})`);
+      g.addColorStop(0.5, `hsla(${n.hue},70%,35%,${n.a * 0.4})`);
+      g.addColorStop(1,   'transparent');
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fillStyle = g;
+      ctx.fill();
+    }
+
+    // stars
+    for (const s of stars) {
+      s.a += s.da;
+      if (s.a <= 0 || s.a >= 1) s.da *= -1;
+      s.y -= s.spd;
+      if (s.y < -2) { s.y = H + 2; s.x = Math.random() * W; }
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${s.a * 0.7})`;
+      ctx.fill();
+    }
+    requestAnimationFrame(drawBg);
+  }
+  drawBg();
+})();
+
+/* ============================================================
+   CANVAS B — PARTICLE BURST (logo reveal)
+   ============================================================ */
+const pCvs = document.getElementById('particle-canvas');
+const pCtx = pCvs.getContext('2d');
+let pW, pH, pParticles = [];
+
+function resizeP() { pW = pCvs.width = window.innerWidth; pH = pCvs.height = window.innerHeight; }
+window.addEventListener('resize', resizeP); resizeP();
+
+function spawnBurst(cx, cy, count, palette) {
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const spd   = Math.random() * 6 + 2;
+    const life  = Math.random() * 80 + 40;
+    pParticles.push({
+      x: cx, y: cy,
+      vx: Math.cos(angle) * spd * (Math.random() * 0.5 + 0.5),
+      vy: Math.sin(angle) * spd * (Math.random() * 0.5 + 0.5) - 1.5,
+      life, maxLife: life,
+      r: Math.random() * 2.5 + 0.8,
+      color: palette[Math.floor(Math.random() * palette.length)],
+      gravity: 0.06
+    });
+  }
+}
+
+function tickParticles() {
+  pCtx.clearRect(0, 0, pW, pH);
+  pParticles = pParticles.filter(p => p.life > 0);
+  for (const p of pParticles) {
+    p.x += p.vx; p.y += p.vy; p.vy += p.gravity;
+    p.vx *= 0.98; p.life--;
+    const alpha = p.life / p.maxLife;
+    pCtx.beginPath();
+    pCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    pCtx.fillStyle = p.color.replace(')', `,${alpha})`).replace('rgb','rgba');
+    pCtx.fill();
+  }
+  requestAnimationFrame(tickParticles);
+}
+tickParticles();
+
+/* ============================================================
+   SHOCKWAVE EFFECT
+   ============================================================ */
+function triggerShockwave() {
+  const sw = document.createElement('div');
+  sw.className = 'shockwave';
+  document.body.appendChild(sw);
+  requestAnimationFrame(() => {
+    sw.style.transition = 'transform 1.6s cubic-bezier(.1,0,.6,1), opacity 1.6s ease';
+    sw.style.transform = 'translate(-50%,-50%) scale(200)';
+    sw.style.opacity = '0';
+  });
+  setTimeout(() => sw.remove(), 1700);
+}
+
+/* ============================================================
+   WEB AUDIO ENGINE
+   ============================================================ */
+let AC, masterGain, reverb;
+
+function initAudio() {
+  const AC_Class = window.AudioContext || window.webkitAudioContext;
+  AC = new AC_Class();
+  masterGain = AC.createGain();
+  masterGain.gain.value = 0.55;
+  masterGain.connect(AC.destination);
+
+  // Build convolution reverb from noise
+  reverb = AC.createConvolver();
+  const revLen = AC.sampleRate * 2.5;
+  const revBuf = AC.createBuffer(2, revLen, AC.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const d = revBuf.getChannelData(ch);
+    for (let i = 0; i < revLen; i++)
+      d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / revLen, 2.5);
+  }
+  reverb.buffer = revBuf;
+  reverb.connect(masterGain);
+}
+
+function sineTone(freq, start, dur, gainPeak, type = 'sine') {
+  const o = AC.createOscillator();
+  const g = AC.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, start);
+  g.gain.setValueAtTime(0, start);
+  g.gain.linearRampToValueAtTime(gainPeak, start + 0.05);
+  g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+  o.connect(g); g.connect(masterGain);
+  o.start(start); o.stop(start + dur);
+}
+
+function playAmbientDrone() {
+  // Two detuned sines for thickness
+  sineTone(55,   AC.currentTime, 12, 0.3, 'sine');
+  sineTone(55.5, AC.currentTime, 12, 0.2, 'sine');
+  // Harmonic shimmer
+  sineTone(220, AC.currentTime, 12, 0.06, 'triangle');
+}
+
+function playGlassHit() {
+  sineTone(880, AC.currentTime, 1.2, 0.15, 'triangle');
+  sineTone(1320, AC.currentTime + 0.04, 0.8, 0.08, 'triangle');
+}
+
+function playWhoosh() {
+  // White noise whoosh via OscillatorNode-driven ring modulator
+  const dur = 1.2;
+  const buf = AC.createBuffer(1, AC.sampleRate * dur, AC.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = AC.createBufferSource(); src.buffer = buf;
+  const filt = AC.createBiquadFilter();
+  filt.type = 'bandpass';
+  filt.frequency.setValueAtTime(4000, AC.currentTime);
+  filt.frequency.exponentialRampToValueAtTime(200, AC.currentTime + dur);
+  filt.Q.value = 1.5;
+  const g = AC.createGain();
+  g.gain.setValueAtTime(0, AC.currentTime);
+  g.gain.linearRampToValueAtTime(0.4, AC.currentTime + 0.05);
+  g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + dur);
+  src.connect(filt); filt.connect(g); g.connect(masterGain);
+  src.start(); src.stop(AC.currentTime + dur);
+}
+
+function playTick(freq = 1400, vol = 0.12) {
+  sineTone(freq, AC.currentTime, 0.12, vol, 'triangle');
+}
+
+function playChime() {
+  const notes = [1047, 1319, 1568, 2093];
+  notes.forEach((f, i) => sineTone(f, AC.currentTime + i * 0.09, 0.6, 0.07, 'triangle'));
+}
+
+function playSwell() {
+  // Rising pad
+  const start = AC.currentTime;
+  [130.81, 164.81, 196, 261.63].forEach((f, i) => {
+    const o = AC.createOscillator();
+    const g = AC.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(f * 0.5, start);
+    o.frequency.linearRampToValueAtTime(f, start + 2);
+    g.gain.setValueAtTime(0, start);
+    g.gain.linearRampToValueAtTime(0.15, start + 1.5);
+    g.gain.linearRampToValueAtTime(0, start + 3);
+    o.connect(g); g.connect(reverb); g.connect(masterGain);
+    o.start(start); o.stop(start + 3);
+  });
+}
+
+function playBoom() {
+  // Sub kick
+  const o = AC.createOscillator();
+  const g = AC.createGain();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(200, AC.currentTime);
+  o.frequency.exponentialRampToValueAtTime(25, AC.currentTime + 1.5);
+  g.gain.setValueAtTime(1.2, AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + 2);
+  o.connect(g); g.connect(masterGain);
+  o.start(); o.stop(AC.currentTime + 2);
+
+  // Noise crash
+  const bLen = AC.sampleRate * 2;
+  const nb = AC.createBuffer(1, bLen, AC.sampleRate);
+  const nd = nb.getChannelData(0);
+  for (let i = 0; i < bLen; i++) nd[i] = Math.random() * 2 - 1;
+  const ns = AC.createBufferSource(); ns.buffer = nb;
+  const nf = AC.createBiquadFilter();
+  nf.type = 'lowpass'; nf.frequency.value = 1200;
+  const ng = AC.createGain();
+  ng.gain.setValueAtTime(0.6, AC.currentTime);
+  ng.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + 1.8);
+  ns.connect(nf); nf.connect(ng); ng.connect(reverb); ng.connect(masterGain);
+  ns.start(); ns.stop(AC.currentTime + 1.8);
+}
+
+function playRevealChord() {
+  // Bright major chord
+  const start = AC.currentTime;
+  [261.63, 329.63, 392, 523.25].forEach(f => {
+    sineTone(f, start, 4, 0.1, 'triangle');
+    sineTone(f * 2, start + 0.2, 3, 0.04, 'sine');
+  });
+  // Sparkle arpeggio
+  [1047, 1319, 1568, 2093, 2637].forEach((f, i) => {
+    sineTone(f, start + i * 0.07, 0.8, 0.06, 'triangle');
+  });
+}
+
+/* ============================================================
+   UTILS
+   ============================================================ */
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function tx(el, props, ms, delay = 0) {
+  return new Promise(r => {
+    setTimeout(() => {
+      el.style.transition = `all ${ms}ms cubic-bezier(.16,1,.3,1)`;
+      Object.assign(el.style, props);
+      setTimeout(r, ms);
+    }, delay);
+  });
+}
+
+/* ============================================================
+   SCENE MANAGER
+   ============================================================ */
+const scenes = ['s1','s2','s34','s5'].map(id => document.getElementById(id));
+function show(i) { scenes.forEach((s, j) => s.classList.toggle('active', j === i)); }
+
+/* ============================================================
+   LETTERBOX OPEN / CLOSE
+   ============================================================ */
+const barT = document.getElementById('bar-t');
+const barB = document.getElementById('bar-b');
+function openBars()  { barT.classList.add('open'); barB.classList.add('open'); }
+function closeBars() { barT.classList.remove('open'); barB.classList.remove('open'); }
+
+/* ============================================================
+   MAIN ANIMATION TIMELINE
+   ============================================================ */
+let running = false;
+
+async function startIntro() {
+  if (running) return;
+  running = true;
+  document.getElementById('replay-btn').classList.remove('show');
+
+  /* ── RESET ─────────────────────────── */
+  show(0);
+  openBars();
+
+  // S1 reset
+  const q = document.getElementById('s1-quote');
+  const sub = document.getElementById('s1-sub');
+  const ln  = document.getElementById('s1-line');
+  q.style.cssText   = 'opacity:0;filter:blur(12px);transform:scale(0.96)';
+  sub.style.cssText = 'opacity:0';
+  ln.style.cssText  = 'opacity:0;transform:scaleX(0)';
+
+  // S2 reset
+  const tf   = document.getElementById('track-fill');
+  const nodes = [...document.querySelectorAll('.node-wrap')];
+  const ncs   = [...document.querySelectorAll('.node-circle')];
+  const hl   = document.getElementById('s2-hl');
+  tf.style.cssText  = 'transition:none;width:0';
+  nodes.forEach(n => { n.style.cssText = 'opacity:0;transform:translateY(18px)'; });
+  ncs.forEach(n => n.classList.remove('lit'));
+  hl.style.cssText  = 'opacity:0;transform:translateY(14px)';
+
+  // S3-4 reset
+  const cards = [...document.querySelectorAll('.gcard')];
+  const platText = document.getElementById('platform-text');
+  const sn = document.getElementById('supernova');
+  cards.forEach(c => {
+    c.style.cssText = `opacity:0;transition:none;animation:none;transform:translate(var(--tx),var(--ty)) scale(0.9)`;
+  });
+  platText.style.cssText = 'opacity:0;transform:translateY(12px)';
+  sn.style.cssText = 'width:0;height:0;opacity:0;transition:none';
+
+  // S5 reset
+  const ew   = document.getElementById('emblem-wrap');
+  const bn   = document.getElementById('brand-name');
+  const bTag = document.getElementById('brand-tagline');
+  const h1   = document.getElementById('halo1');
+  const h2el = document.getElementById('halo2');
+  ew.style.cssText   = 'opacity:0;filter:blur(20px);transform:scale(0.85) translateY(20px)';
+  bn.style.cssText   = 'opacity:0;transform:translateY(14px)';
+  bTag.style.cssText = 'opacity:0';
+  h1.style.opacity   = '0'; h2el.style.opacity = '0';
+  document.getElementById('light-rays').style.opacity = '0';
+
+  /* ── SCENE 1 ─────────────────────────── */
+  playAmbientDrone();
+  await sleep(200);
+
+  // Horizon line appears
+  tx(ln, { opacity:'1', transform:'scaleX(1)' }, 1200);
+  await sleep(600);
+
+  // Quote rises with depth
+  tx(q, { opacity:'1', filter:'blur(0px)', transform:'scale(1)' }, 1800);
+  await sleep(900);
+  tx(sub, { opacity:'1' }, 800);
+
+  await sleep(1600);                          // was 2800
+
+  // Fade out S1
+  playWhoosh();
+  tx(q, { opacity:'0', filter:'blur(8px)', transform:'scale(1.04)' }, 700);
+  tx(sub, { opacity:'0' }, 500);
+  tx(ln,  { opacity:'0', transform:'scaleX(0)' }, 700);
+  await sleep(750);                           // was 900
+
+  /* ── SCENE 2 ─────────────────────────── */
+  show(1);
+  playWhoosh();
+  await sleep(200);                           // was 300
+
+  // Draw the track line
+  tf.style.transition = 'width 1.6s cubic-bezier(.4,0,.2,1)';
+  tf.style.width = '100%';
+
+  // Nodes pop up one by one timed with the line draw
+  for (let i = 0; i < nodes.length; i++) {
+    await sleep(i === 0 ? 80 : 220);         // was 100 / 260
+    tx(nodes[i], { opacity:'1', transform:'translateY(0)' }, 700);
+    // Light up the node a beat after appearing
+    setTimeout(() => {
+      ncs[i].classList.add('lit');
+      playTick(1000 + i * 150, 0.1);
+    }, 350);
+  }
+
+  await sleep(500);                           // was 600
+  playChime();
+  tx(hl, { opacity:'1', transform:'translateY(0)' }, 1000);
+
+  await sleep(1500);                          // was 2400
+
+  /* ── SCENE 3 ─────────────────────────── */
+  playWhoosh();
+  show(2);
+  await sleep(300);                           // was 400
+
+  cards.forEach((c, i) => {
+    tx(c, { opacity:'1', transform:'translate(var(--tx),var(--ty)) scale(1)' }, 900, i * 160)
+      .then(() => {
+        c.style.animation = `cardFloat ${4.5 + i * 0.3}s ${i * 0.25}s ease-in-out infinite`;
+      });
+  });
+
+  await sleep(1600);                          // was 2400
+
+  /* ── SCENE 4 — CONVERGENCE ─────────────────────────── */
+  playSwell();
+  tx(platText, { opacity:'1', transform:'translateY(0)' }, 900);
+
+  // Cards rush to center
+  await sleep(400);                           // was 500
+  cards.forEach(c => {
+    c.style.animation = 'none';
+    tx(c, { transform:'translate(0,0) scale(0)', opacity:'0' }, 1100, 300);
+  });
+
+  await sleep(1200);                          // was 1400
+
+  // Supernova flash
+  playBoom();
+  triggerShockwave();
+  spawnBurst(window.innerWidth / 2, window.innerHeight / 2, 120,
+    ['rgb(0,212,187)', 'rgb(243,161,78)', 'rgb(255,255,255)']);
+
+  tx(sn, { width:'140vw', height:'140vw', opacity:'1' }, 900).then(() => {
+    show(3);
+    tx(sn, { opacity:'0' }, 800);
+  });
+
+  await sleep(1000);                          // was 1200
+
+  /* ── SCENE 5 — LOGO REVEAL ─────────────────────────── */
+  await sleep(400);                           // was 600
+  playRevealChord();
+
+  // Light rays on
+  const lr = document.getElementById('light-rays');
+  lr.style.transition = 'opacity 2s ease';
+  lr.style.opacity = '0.7';
+
+  // Halo rings
+  h1.style.transition = 'opacity 1.5s ease'; h1.style.opacity = '1';
+  h2el.style.transition = 'opacity 1.5s ease'; h2el.style.opacity = '1';
+
+  // Emblem materialises
+  tx(ew, { opacity:'1', filter:'blur(0px)', transform:'scale(1) translateY(0)' }, 1800);
+
+  await sleep(800);                           // was 900
+
+  // Particle sparkle around center
+  spawnBurst(window.innerWidth / 2, window.innerHeight * 0.4, 60,
+    ['rgb(0,212,187)', 'rgb(243,161,78)', 'rgb(255,255,255)']);
+
+  // Brand name slides up
+  tx(bn, { opacity:'1', transform:'translateY(0)' }, 1200);
+  await sleep(500);                           // was 600
+  tx(bTag, { opacity:'1' }, 800);
+
+  await sleep(3000);                          // was 3500
+
+  /* ── DONE ─────────────────────────── */
+  document.getElementById('replay-btn').classList.add('show');
+  running = false;
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+function boot() {
+  const overlay = document.getElementById('start-screen');
+  overlay.style.opacity = '0';
+  setTimeout(() => {
+    overlay.style.display = 'none';
+    initAudio();
+    startIntro();
+  }, 1000);
+}
+
+function replayIntro() {
+  startIntro();
+}
+</script>
+</body>
+</html>

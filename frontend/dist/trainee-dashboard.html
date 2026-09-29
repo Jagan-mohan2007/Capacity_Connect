@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trainee Dashboard - Capacity Connect</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif}body{color:#fff;background-color:#0a0e1a;min-height:100vh;display:flex;overflow-x:hidden}#stars-bg{z-index:0;pointer-events:none;position:fixed;inset:0}.sidebar{-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);z-index:10;background:#080c18f2;border-right:1px solid #ffffff0d;flex-direction:column;width:250px;height:100vh;padding:24px;display:flex;position:fixed}.logo{color:#00d4bb;align-items:center;gap:8px;margin-bottom:40px;font-size:20px;font-weight:600;display:flex}.nav-item{color:#ffffffb3;border-radius:8px;align-items:center;gap:12px;margin-bottom:8px;padding:12px 16px;text-decoration:none;transition:all .2s;display:flex}.nav-item:hover,.nav-item.active{color:#00d4bb;background:#00d4bb1a}.logout{color:#f3a14e;margin-top:auto}.logout:hover{color:#f3a14e;background:#f3a14e1a}.main-content{z-index:1;flex-direction:column;flex:1;gap:24px;max-width:1400px;margin-left:250px;padding:24px 32px;display:flex;position:relative}.topbar{border-bottom:1px solid #ffffff0d;justify-content:space-between;align-items:center;padding-bottom:16px;display:flex}.topbar-right{align-items:center;gap:24px;display:flex}.notification{cursor:pointer;font-size:20px;position:relative}.notification:after{content:"2";color:#fff;background:#ff4757;border-radius:50%;justify-content:center;align-items:center;width:16px;height:16px;font-size:10px;font-weight:700;display:flex;position:absolute;top:-5px;right:-8px}.user-profile{align-items:center;gap:12px;display:flex}.avatar{color:#080c18;background:#00d4bb;border-radius:50%;justify-content:center;align-items:center;width:40px;height:40px;font-weight:700;display:flex}.card{background:#ffffff09;border:1px solid #ffffff12;border-radius:12px;padding:20px;transition:all .25s}.card:hover{transform:translateY(-3px);box-shadow:0 8px 25px #0000004d}.card-title{color:#ffffffb3;align-items:center;gap:8px;margin-bottom:16px;font-size:16px;display:flex}.stats-grid{grid-template-columns:repeat(4,1fr);gap:20px;display:grid}.stat-card{justify-content:space-between;align-items:center;display:flex}.stat-card.teal{border-left:4px solid #00d4bb}.stat-card.cyan{border-left:4px solid #00b8d4}.stat-card.green{border-left:4px solid #00e676}.stat-card.gold{border-left:4px solid #f3a14e}.stat-info h3{color:#fff9;margin-bottom:4px;font-size:14px}.stat-info .value{margin-bottom:4px;font-size:24px;font-weight:700}.stat-info .subtitle{color:#ffffff80;font-size:12px}.progress-bar-bg{background:#ffffff1a;border-radius:3px;width:100px;height:6px;margin-top:6px;overflow:hidden}.progress-bar-fill{background:#f3a14e;border-radius:3px;height:100%}.gauge-container{width:60px;height:60px;position:relative}.gauge-svg{transform:rotate(-90deg)}.gauge-bg{fill:none;stroke:#ffffff1a;stroke-width:6px}.gauge-value{fill:none;stroke:#00d4bb;stroke-width:6px;stroke-linecap:round;stroke-dasharray:157;stroke-dashoffset:55px}.gauge-text{font-size:12px;font-weight:700;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}.roadmap-container{justify-content:space-between;align-items:center;padding:20px 40px;display:flex;position:relative}.roadmap-container:before{content:"";z-index:1;background:#ffffff1a;height:2px;position:absolute;top:40px;left:50px;right:50px}.roadmap-container:after{content:"";z-index:1;background:#00d4bb;width:45%;height:2px;position:absolute;top:40px;left:50px}.milestone{z-index:2;text-align:center;flex-direction:column;align-items:center;gap:12px;width:120px;display:flex}.node{background:#ffffff0d;border:2px solid #fff3;border-radius:50%;justify-content:center;align-items:center;width:40px;height:40px;font-size:16px;display:flex}.node.completed{color:#0a0e1a;background:#00e676;border-color:#00e676}.node.current{color:#00d4bb;background:#00d4bb33;border-color:#00d4bb;animation:2s infinite pulse}.node.locked{color:#6a748c;background:#1e2436;border-color:#313952}.milestone-label{color:#ffffffb3;font-size:12px}@keyframes pulse{0%{box-shadow:0 0 #00d4bb66}70%{box-shadow:0 0 0 10px #00d4bb00}to{box-shadow:0 0 #00d4bb00}}.two-cols{grid-template-columns:1fr 1fr;gap:24px;display:grid}.list-card{flex-direction:column;gap:12px;display:flex}.mini-card{background:#ffffff05;border:1px solid #ffffff0d;border-radius:8px;justify-content:space-between;align-items:center;padding:16px;display:flex}.course-mini{border-top-width:3px}.course-mini.teal-top{border-top-color:#00d4bb}.course-mini.gold-top{border-top-color:#f3a14e}.course-mini.green-top{border-top-color:#00e676}.mini-card-info h4{margin-bottom:4px;font-size:14px}.mini-card-info p{color:#ffffff80;align-items:center;gap:8px;font-size:12px;display:flex}.badge{border-radius:12px;padding:2px 8px;font-size:10px;font-weight:600}.badge.teal{color:#00d4bb;background:#00d4bb26}.badge.gold{color:#f3a14e;background:#f3a14e26}.badge.green{color:#00e676;background:#00e67626}.btn{cursor:pointer;border-radius:6px;padding:6px 16px;font-size:13px;font-weight:500;text-decoration:none;transition:all .2s}.btn-outline{color:#00d4bb;background:0 0;border:1px solid #00d4bb}.btn-outline:hover{background:#00d4bb1a}.btn-solid{color:#080c18;background:#00d4bb;border:1px solid #00d4bb}.btn-solid:hover{background:#00b8a3;border-color:#00b8a3}.trainer-avatar{color:#fff;background:#ffffff1a;border-radius:50%;justify-content:center;align-items:center;width:32px;height:32px;margin-right:12px;font-size:12px;display:flex}.trainer-flex{align-items:center;display:flex}.chart-container{width:100%;height:300px}.ai-fab{cursor:pointer;z-index:1000;background:#00d4bb;border:none;border-radius:50%;justify-content:center;align-items:center;width:56px;height:56px;font-size:24px;transition:transform .2s;display:flex;position:fixed;bottom:24px;right:24px;box-shadow:0 4px 20px #00d4bb66}.ai-fab:hover{transform:scale(1.05)}.chat-popup{z-index:1000;background:#12182b;border:1px solid #ffffff1a;border-radius:12px;flex-direction:column;width:300px;height:400px;display:none;position:fixed;bottom:80px;right:24px;overflow:hidden;box-shadow:0 10px 40px #00000080}.chat-popup.active{display:flex}.chat-header{color:#080c18;background:#00d4bb;justify-content:space-between;align-items:center;padding:12px 16px;font-weight:700;display:flex}.chat-close{cursor:pointer;color:#080c18;background:0 0;border:none;font-size:16px}.chat-body{flex-direction:column;flex:1;gap:12px;padding:16px;display:flex;overflow-y:auto}.chat-msg{color:#ffffffe6;background:#ffffff0d;border-radius:12px 12px 12px 2px;padding:12px;font-size:13px;line-height:1.5}.chat-input-area{background:#0003;border-top:1px solid #ffffff0d;padding:12px}.chat-input-area input{color:#fff;background:#ffffff0d;border:1px solid #ffffff1a;border-radius:20px;outline:none;width:100%;padding:8px 12px}.chat-input-area input::placeholder{color:#fff6}</style>
+</head>
+<body>
+    <canvas id="stars-bg"></canvas>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <span>Capacity Connect</span>
+        </div>
+        <nav>
+            <a href="#" class="nav-item active">📊 Dashboard</a>
+            <a href="#" class="nav-item">🛤️ Learning Path</a>
+            <a href="#" class="nav-item">📝 Assessments</a>
+            <a href="#" class="nav-item">📈 Competency Score</a>
+            <a href="#" class="nav-item">💡 Recommendations</a>
+            <a href="#" class="nav-item">🤖 AI Assistant</a>
+        </nav>
+        <a href="trainee-login.html" class="nav-item logout">🚪 Logout</a>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Topbar -->
+        <header class="topbar">
+            <h2>My Dashboard</h2>
+            <div class="topbar-right">
+                <div class="notification">🔔</div>
+                <div class="user-profile">
+                    <div class="avatar">AR</div>
+                    <span>Alex Rivera</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Row -->
+        <div class="stats-grid">
+            <div class="card stat-card teal">
+                <div class="stat-info">
+                    <h3>Competency Level</h3>
+                    <div class="value">6.5 <span style="font-size:14px;color:rgba(255,255,255,0.5)">/10</span></div>
+                    <div class="subtitle">Intermediate</div>
+                </div>
+                <div class="gauge-container">
+                    <svg class="gauge-svg" width="60" height="60" viewBox="0 0 60 60">
+                        <circle class="gauge-bg" cx="30" cy="30" r="25"></circle>
+                        <circle class="gauge-value" cx="30" cy="30" r="25"></circle>
+                    </svg>
+                    <div class="gauge-text">65%</div>
+                </div>
+            </div>
+
+            <div class="card stat-card cyan">
+                <div class="stat-info">
+                    <h3>Courses Enrolled</h3>
+                    <div class="value">4</div>
+                    <div class="subtitle">● 2 in progress</div>
+                </div>
+            </div>
+
+            <div class="card stat-card green">
+                <div class="stat-info">
+                    <h3>Completed Courses</h3>
+                    <div class="value">2</div>
+                    <div class="subtitle" style="color:#00e676">✓ on track</div>
+                </div>
+            </div>
+
+            <div class="card stat-card gold">
+                <div class="stat-info">
+                    <h3>Learning Progress</h3>
+                    <div class="value">68%</div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width: 68%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Learning Roadmap -->
+        <div class="card">
+            <div class="card-title">🛤️ Your Learning Roadmap</div>
+            <div class="roadmap-container">
+                <div class="milestone">
+                    <div class="node completed">✓</div>
+                    <div class="milestone-label">Fundamentals</div>
+                </div>
+                <div class="milestone">
+                    <div class="node completed">✓</div>
+                    <div class="milestone-label">Core Assessment</div>
+                </div>
+                <div class="milestone">
+                    <div class="node current">🔵</div>
+                    <div class="milestone-label">Intermediate Training</div>
+                </div>
+                <div class="milestone">
+                    <div class="node locked">🔒</div>
+                    <div class="milestone-label">Advanced Modules</div>
+                </div>
+                <div class="milestone">
+                    <div class="node locked">🔒</div>
+                    <div class="milestone-label">Certification</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Two Columns -->
+        <div class="two-cols">
+            <div class="card list-card">
+                <div class="card-title">👥 Recommended Trainers</div>
+                
+                <div class="mini-card">
+                    <div class="trainer-flex">
+                        <div class="trainer-avatar">SC</div>
+                        <div class="mini-card-info">
+                            <h4>Dr. Sarah Chen</h4>
+                            <p>Data Science • ★★★★★ (4.9)</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline">Connect</button>
+                </div>
+                
+                <div class="mini-card">
+                    <div class="trainer-flex">
+                        <div class="trainer-avatar">RK</div>
+                        <div class="mini-card-info">
+                            <h4>Rajesh Kumar</h4>
+                            <p>Cloud Computing • ★★★★★ (4.8)</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline">Connect</button>
+                </div>
+                
+                <div class="mini-card">
+                    <div class="trainer-flex">
+                        <div class="trainer-avatar">AJ</div>
+                        <div class="mini-card-info">
+                            <h4>Amanda Jones</h4>
+                            <p>Web Dev • ★★★★☆ (4.7)</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline">Connect</button>
+                </div>
+            </div>
+
+            <div class="card list-card">
+                <div class="card-title">📚 Recommended Courses</div>
+                
+                <div class="mini-card course-mini teal-top">
+                    <div class="mini-card-info">
+                        <h4>Advanced Python</h4>
+                        <p>8 weeks • <span class="badge teal">Advanced</span></p>
+                    </div>
+                    <button class="btn btn-solid">Enroll</button>
+                </div>
+                
+                <div class="mini-card course-mini gold-top">
+                    <div class="mini-card-info">
+                        <h4>Data Visualization</h4>
+                        <p>4 weeks • <span class="badge gold">Intermediate</span></p>
+                    </div>
+                    <button class="btn btn-solid">Enroll</button>
+                </div>
+                
+                <div class="mini-card course-mini green-top">
+                    <div class="mini-card-info">
+                        <h4>Cloud Basics</h4>
+                        <p>6 weeks • <span class="badge green">Beginner</span></p>
+                    </div>
+                    <button class="btn btn-solid">Enroll</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="card">
+            <div class="card-title">📈 Your Competency Growth</div>
+            <div class="chart-container">
+                <canvas id="growthChart"></canvas>
+            </div>
+        </div>
+    </main>
+
+    <!-- AI Assistant -->
+    <button class="ai-fab" id="aiToggle" onclick="toggleChat()">🤖</button>
+    <div class="chat-popup" id="chatPopup">
+        <div class="chat-header">
+            <span>AI Learning Assistant</span>
+            <button class="chat-close" onclick="toggleChat()">✕</button>
+        </div>
+        <div class="chat-body">
+            <div class="chat-msg">
+                Based on your progress, I recommend focusing on Advanced Data Structures next. You're 68% through your learning path! Keep going! 🚀
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" placeholder="Ask me anything...">
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // AI Chat Toggle
+        function toggleChat() {
+            document.getElementById('chatPopup').classList.toggle('active');
+        }
+
+        // Chart.js Setup
+        const ctx = document.getElementById('growthChart').getContext('2d');
+        
+        let gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(0, 212, 187, 0.4)');
+        gradient.addColorStop(1, 'rgba(0, 212, 187, 0)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Competency Score',
+                    data: [4.2, 4.8, 5.5, 5.9, 6.2, 6.5],
+                    borderColor: '#00d4bb',
+                    backgroundColor: gradient,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#00d4bb',
+                    pointBorderColor: '#080c18',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 10,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.06)'
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.5)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.06)'
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.5)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Starfield Background
+        const _c=document.getElementById('stars-bg'),_x=_c.getContext('2d');let _W,_H,_s=[];
+        function _r(){_W=_c.width=innerWidth;_H=_c.height=innerHeight;_s=Array.from({length:Math.floor(_W*_H/3200)},()=>({x:Math.random()*_W,y:Math.random()*_H,r:Math.random()*1.1+0.2,a:Math.random(),d:(Math.random()-0.5)*0.003,v:Math.random()*0.03+0.005}));}
+        addEventListener('resize',_r);_r();
+        (function _t(){_x.clearRect(0,0,_W,_H);for(const s of _s){s.a+=s.d;if(s.a<=0||s.a>=1)s.d*=-1;s.y-=s.v;if(s.y<-2){s.y=_H+2;s.x=Math.random()*_W;}_x.beginPath();_x.arc(s.x,s.y,s.r,0,6.28);_x.fillStyle=`rgba(255,255,255,${s.a*0.55})`;_x.fill();}requestAnimationFrame(_t);})();
+    </script>
+</body>
+</html>

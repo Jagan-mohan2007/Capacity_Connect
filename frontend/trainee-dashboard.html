@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trainee Dashboard - Capacity Connect</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        body {
+            background-color: #0a0e1a;
+            color: #fff;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Starfield Background */
+        #stars-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: rgba(8, 12, 24, 0.95);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 600;
+            color: #00d4bb;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: rgba(0, 212, 187, 0.1);
+            color: #00d4bb;
+        }
+
+        .logout {
+            margin-top: auto;
+            color: #f3a14e;
+        }
+        
+        .logout:hover {
+            background: rgba(243, 161, 78, 0.1);
+            color: #f3a14e;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            padding: 24px 32px;
+            flex: 1;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            max-width: 1400px;
+        }
+
+        /* Topbar */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .notification {
+            position: relative;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .notification::after {
+            content: '2';
+            position: absolute;
+            top: -5px;
+            right: -8px;
+            background: #ff4757;
+            color: #fff;
+            font-size: 10px;
+            font-weight: bold;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #00d4bb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #080c18;
+        }
+
+        /* General Card */
+        .card {
+            background: rgba(255, 255, 255, 0.035);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.25s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-title {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Stat Cards Row */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .stat-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .stat-card.teal { border-left: 4px solid #00d4bb; }
+        .stat-card.cyan { border-left: 4px solid #00b8d4; }
+        .stat-card.green { border-left: 4px solid #00e676; }
+        .stat-card.gold { border-left: 4px solid #f3a14e; }
+
+        .stat-info h3 {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 4px;
+        }
+
+        .stat-info .value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .stat-info .subtitle {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .progress-bar-bg {
+            background: rgba(255, 255, 255, 0.1);
+            height: 6px;
+            border-radius: 3px;
+            width: 100px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+        
+        .progress-bar-fill {
+            background: #f3a14e;
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        /* Circular Gauge */
+        .gauge-container {
+            width: 60px;
+            height: 60px;
+            position: relative;
+        }
+
+        .gauge-svg {
+            transform: rotate(-90deg);
+        }
+
+        .gauge-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.1);
+            stroke-width: 6;
+        }
+
+        .gauge-value {
+            fill: none;
+            stroke: #00d4bb;
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-dasharray: 157; /* 2 * pi * r (25) */
+            stroke-dashoffset: 55; /* 157 - (157 * 0.65) */
+        }
+        
+        .gauge-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* Roadmap */
+        .roadmap-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 40px;
+            position: relative;
+        }
+
+        .roadmap-container::before {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 50px;
+            right: 50px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 1;
+        }
+        
+        .roadmap-container::after {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 50px;
+            width: 45%;
+            height: 2px;
+            background: #00d4bb;
+            z-index: 1;
+        }
+
+        .milestone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            z-index: 2;
+            width: 120px;
+            text-align: center;
+        }
+
+        .node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .node.completed {
+            background: #00e676;
+            border-color: #00e676;
+            color: #0a0e1a;
+        }
+
+        .node.current {
+            background: rgba(0, 212, 187, 0.2);
+            border-color: #00d4bb;
+            color: #00d4bb;
+            animation: pulse 2s infinite;
+        }
+
+        .node.locked {
+            background: #1e2436;
+            border-color: #313952;
+            color: #6a748c;
+        }
+        
+        .milestone-label {
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 212, 187, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 212, 187, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 212, 187, 0); }
+        }
+
+        /* Two Columns */
+        .two-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .list-card {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .mini-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .course-mini {
+            border-top-width: 3px;
+        }
+        
+        .course-mini.teal-top { border-top-color: #00d4bb; }
+        .course-mini.gold-top { border-top-color: #f3a14e; }
+        .course-mini.green-top { border-top-color: #00e676; }
+
+        .mini-card-info h4 {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .mini-card-info p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        
+        .badge.teal { background: rgba(0, 212, 187, 0.15); color: #00d4bb; }
+        .badge.gold { background: rgba(243, 161, 78, 0.15); color: #f3a14e; }
+        .badge.green { background: rgba(0, 230, 118, 0.15); color: #00e676; }
+
+        .btn {
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #00d4bb;
+            color: #00d4bb;
+        }
+
+        .btn-outline:hover {
+            background: rgba(0, 212, 187, 0.1);
+        }
+
+        .btn-solid {
+            background: #00d4bb;
+            border: 1px solid #00d4bb;
+            color: #080c18;
+        }
+
+        .btn-solid:hover {
+            background: #00b8a3;
+            border-color: #00b8a3;
+        }
+        
+        .trainer-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            margin-right: 12px;
+            color: #fff;
+        }
+        
+        .trainer-flex {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            height: 300px;
+            width: 100%;
+        }
+
+        /* AI Assistant */
+        .ai-fab {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #00d4bb;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 212, 187, 0.4);
+            transition: transform 0.2s;
+        }
+
+        .ai-fab:hover {
+            transform: scale(1.05);
+        }
+
+        .chat-popup {
+            position: fixed;
+            bottom: 80px;
+            right: 24px;
+            width: 300px;
+            height: 400px;
+            background: #12182b;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .chat-popup.active {
+            display: flex;
+        }
+
+        .chat-header {
+            background: #00d4bb;
+            color: #080c18;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+        }
+        
+        .chat-close {
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 16px;
+            color: #080c18;
+        }
+
+        .chat-body {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-msg {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: 12px;
+            border-bottom-left-radius: 2px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .chat-input-area {
+            padding: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .chat-input-area input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 8px 12px;
+            border-radius: 20px;
+            color: #fff;
+            outline: none;
+        }
+
+        .chat-input-area input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="stars-bg"></canvas>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <span>Capacity Connect</span>
+        </div>
+        <nav>
+            <a href="#" class="nav-item active">📊 Dashboard</a>
+            <a href="#" class="nav-item">🛤️ Learning Path</a>
+            <a href="#" class="nav-item">📝 Assessments</a>
+            <a href="#" class="nav-item">📈 Competency Score</a>
+            <a href="#" class="nav-item">💡 Recommendations</a>
+            <a href="#" class="nav-item">🤖 AI Assistant</a>
+        </nav>
+        <a href="trainee-login.html" class="nav-item logout">🚪 Logout</a>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Topbar -->
+        <header class="topbar">
+            <h2>My Dashboard</h2>
+            <div class="topbar-right">
+                <div class="notification">🔔</div>
+                <div class="user-profile">
+                    <div class="avatar">AR</div>
+                    <span>Alex Rivera</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Row -->
+        <div class="stats-grid">
+            <div class="card stat-card teal">
+                <div class="stat-info">
+                    <h3>Competency Level</h3>
+                    <div class="value">6.5 <span style="font-size:14px;color:rgba(255,255,255,0.5)">/10</span></div>
+                    <div class="subtitle">Intermediate</div>
+                </div>
+                <div class="gauge-container">
+                    <svg class="gauge-svg" width="60" height="60" viewBox="0 0 60 60">
+                        <circle class="gauge-bg" cx="30" cy="30" r="25"></circle>
+                        <circle class="gauge-value" cx="30" cy="30" r="25"></circle>
+                    </svg>
+                    <div class="gauge-text">65%</div>
+                </div>
+            </div>
+
+            <div class="card stat-card cyan">
+                <div class="stat-info">
+                    <h3>Courses Enrolled</h3>
+                    <div class="value">4</div>
+                    <div class="subtitle">● 2 in progress</div>
+                </div>
+            </div>
+
+            <div class="card stat-card green">
+                <div class="stat-info">
+                    <h3>Completed Courses</h3>
+                    <div class="value">2</div>
+                    <div class="subtitle" style="color:#00e676">✓ on track</div>
+                </div>
+            </div>
+
+            <div class="card stat-card gold">
+                <div class="stat-info">
+                    <h3>Learning Progress</h3>
+                    <div class="value">68%</div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width: 68%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Learning Roadmap -->
+        <div class="card">
+            <div class="card-title">🛤️ Your Learning Roadmap</div>
+            <div class="roadmap-container">
+                <div class="milestone">
+                    <div class="node completed">✓</div>
+                    <div class="milestone-label">Fundamentals</div>
+                </div>
+                <div class="milestone">
+                    <div class="node completed">✓</div>
+                    <div class="milestone-label">Core Assessment</div>
+                </div>
+                <div class="milestone">
+                    <div class="node current">🔵</div>
+                    <div class="milestone-label">Intermediate Training</div>
+                </div>
+                <div class="milestone">
+                    <div class="node locked">🔒</div>
+                    <div class="milestone-label">Advanced Modules</div>
+                </div>
+                <div class="milestone">
+                    <div class="node locked">🔒</div>
+                    <div class="milestone-label">Certification</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Two Columns -->
+        <div class="two-cols">
+            <div class="card list-card">
+                <div class="card-title">👥 Recommended Trainers</div>
+                
+                <div class="mini-card">
+                    <div class="trainer-flex">
+                        <div class="trainer-avatar">SC</div>
+                        <div class="mini-card-info">
+                            <h4>Dr. Sarah Chen</h4>
+                            <p>Data Science • ★★★★★ (4.9)</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline">Connect</button>
+                </div>
+                
+                <div class="mini-card">
+                    <div class="trainer-flex">
+                        <div class="trainer-avatar">RK</div>
+                        <div class="mini-card-info">
+                            <h4>Rajesh Kumar</h4>
+                            <p>Cloud Computing • ★★★★★ (4.8)</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline">Connect</button>
+                </div>
+                
+                <div class="mini-card">
+                    <div class="trainer-flex">
+                        <div class="trainer-avatar">AJ</div>
+                        <div class="mini-card-info">
+                            <h4>Amanda Jones</h4>
+                            <p>Web Dev • ★★★★☆ (4.7)</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline">Connect</button>
+                </div>
+            </div>
+
+            <div class="card list-card">
+                <div class="card-title">📚 Recommended Courses</div>
+                
+                <div class="mini-card course-mini teal-top">
+                    <div class="mini-card-info">
+                        <h4>Advanced Python</h4>
+                        <p>8 weeks • <span class="badge teal">Advanced</span></p>
+                    </div>
+                    <button class="btn btn-solid">Enroll</button>
+                </div>
+                
+                <div class="mini-card course-mini gold-top">
+                    <div class="mini-card-info">
+                        <h4>Data Visualization</h4>
+                        <p>4 weeks • <span class="badge gold">Intermediate</span></p>
+                    </div>
+                    <button class="btn btn-solid">Enroll</button>
+                </div>
+                
+                <div class="mini-card course-mini green-top">
+                    <div class="mini-card-info">
+                        <h4>Cloud Basics</h4>
+                        <p>6 weeks • <span class="badge green">Beginner</span></p>
+                    </div>
+                    <button class="btn btn-solid">Enroll</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="card">
+            <div class="card-title">📈 Your Competency Growth</div>
+            <div class="chart-container">
+                <canvas id="growthChart"></canvas>
+            </div>
+        </div>
+    </main>
+
+    <!-- AI Assistant -->
+    <button class="ai-fab" id="aiToggle" onclick="toggleChat()">🤖</button>
+    <div class="chat-popup" id="chatPopup">
+        <div class="chat-header">
+            <span>AI Learning Assistant</span>
+            <button class="chat-close" onclick="toggleChat()">✕</button>
+        </div>
+        <div class="chat-body">
+            <div class="chat-msg">
+                Based on your progress, I recommend focusing on Advanced Data Structures next. You're 68% through your learning path! Keep going! 🚀
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" placeholder="Ask me anything...">
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // AI Chat Toggle
+        function toggleChat() {
+            document.getElementById('chatPopup').classList.toggle('active');
+        }
+
+        // Chart.js Setup
+        const ctx = document.getElementById('growthChart').getContext('2d');
+        
+        let gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(0, 212, 187, 0.4)');
+        gradient.addColorStop(1, 'rgba(0, 212, 187, 0)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Competency Score',
+                    data: [4.2, 4.8, 5.5, 5.9, 6.2, 6.5],
+                    borderColor: '#00d4bb',
+                    backgroundColor: gradient,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#00d4bb',
+                    pointBorderColor: '#080c18',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 10,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.06)'
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.5)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.06)'
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.5)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Starfield Background
+        const _c=document.getElementById('stars-bg'),_x=_c.getContext('2d');let _W,_H,_s=[];
+        function _r(){_W=_c.width=innerWidth;_H=_c.height=innerHeight;_s=Array.from({length:Math.floor(_W*_H/3200)},()=>({x:Math.random()*_W,y:Math.random()*_H,r:Math.random()*1.1+0.2,a:Math.random(),d:(Math.random()-0.5)*0.003,v:Math.random()*0.03+0.005}));}
+        addEventListener('resize',_r);_r();
+        (function _t(){_x.clearRect(0,0,_W,_H);for(const s of _s){s.a+=s.d;if(s.a<=0||s.a>=1)s.d*=-1;s.y-=s.v;if(s.y<-2){s.y=_H+2;s.x=Math.random()*_W;}_x.beginPath();_x.arc(s.x,s.y,s.r,0,6.28);_x.fillStyle=`rgba(255,255,255,${s.a*0.55})`;_x.fill();}requestAnimationFrame(_t);})();
+    </script>
+</body>
+</html>
